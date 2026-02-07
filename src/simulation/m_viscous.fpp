@@ -20,12 +20,15 @@ module m_viscous
 
     use m_finite_differences
 
+    use m_re_visc
+
     private; public s_get_viscous, &
  s_compute_viscous_stress_cylindrical_boundary, &
  s_initialize_viscous_module, &
  s_reconstruct_cell_boundary_values_visc_deriv, &
  s_finalize_viscous_module, &
- s_compute_viscous_stress_tensor
+ s_compute_viscous_stress_tensor, &
+ s_compute_viscous_gradient_correction
 
     type(int_bounds_info) :: iv
     type(int_bounds_info) :: is1_viscous, is2_viscous, is3_viscous
@@ -75,9 +78,11 @@ contains
         #:if not MFC_CASE_OPTIMIZATION and USING_AMD
             real(wp), dimension(3) :: alpha_visc, alpha_rho_visc
             real(wp), dimension(3, 3) :: tau_Re
+            real(wp), dimension(3, 2) :: Re_visc_nn
         #:else
             real(wp), dimension(num_fluids) :: alpha_visc, alpha_rho_visc
             real(wp), dimension(num_dims, num_dims) :: tau_Re
+            real(wp), dimension(num_fluids, 2) :: Re_visc_nn
         #:endif
 
         integer :: i, j, k, l, q !< Generic loop iterator
@@ -181,6 +186,27 @@ contains
                                         Re_visc(i) = 1._wp/max(Re_visc(i), sgm_eps)
 
                                     end do
+
+                                    ! Non-Newtonian viscosity override
+                                    if (any_non_newtonian) then
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_visc, j, k, l, &
+                                            Re_visc_nn, grad_x_vf, &
+                                            grad_y_vf, grad_z_vf)
+                                        $:GPU_LOOP(parallelism='[seq]')
+                                        do i = 1, 2
+                                            Re_visc(i) = 0._wp
+                                            $:GPU_LOOP(parallelism='[seq]')
+                                            do q = 1, num_fluids
+                                                if (Re_visc_nn(q, i) /= dflt_real &
+                                                    .and. Re_visc_nn(q, i) > sgm_eps) then
+                                                    Re_visc(i) = Re_visc(i) + &
+                                                        alpha_visc(q)/Re_visc_nn(q, i)
+                                                end if
+                                            end do
+                                            Re_visc(i) = 1._wp/max(Re_visc(i), sgm_eps)
+                                        end do
+                                    end if
                                 end if
                             end if
 
@@ -291,6 +317,27 @@ contains
                                         Re_visc(i) = 1._wp/max(Re_visc(i), sgm_eps)
 
                                     end do
+
+                                    ! Non-Newtonian viscosity override
+                                    if (any_non_newtonian) then
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_visc, j, k, l, &
+                                            Re_visc_nn, grad_x_vf, &
+                                            grad_y_vf, grad_z_vf)
+                                        $:GPU_LOOP(parallelism='[seq]')
+                                        do i = 1, 2
+                                            Re_visc(i) = 0._wp
+                                            $:GPU_LOOP(parallelism='[seq]')
+                                            do q = 1, num_fluids
+                                                if (Re_visc_nn(q, i) /= dflt_real &
+                                                    .and. Re_visc_nn(q, i) > sgm_eps) then
+                                                    Re_visc(i) = Re_visc(i) + &
+                                                        alpha_visc(q)/Re_visc_nn(q, i)
+                                                end if
+                                            end do
+                                            Re_visc(i) = 1._wp/max(Re_visc(i), sgm_eps)
+                                        end do
+                                    end if
                                 end if
                             end if
 
@@ -398,6 +445,27 @@ contains
                                         Re_visc(i) = 1._wp/max(Re_visc(i), sgm_eps)
 
                                     end do
+
+                                    ! Non-Newtonian viscosity override
+                                    if (any_non_newtonian) then
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_visc, j, k, l, &
+                                            Re_visc_nn, grad_x_vf, &
+                                            grad_y_vf, grad_z_vf)
+                                        $:GPU_LOOP(parallelism='[seq]')
+                                        do i = 1, 2
+                                            Re_visc(i) = 0._wp
+                                            $:GPU_LOOP(parallelism='[seq]')
+                                            do q = 1, num_fluids
+                                                if (Re_visc_nn(q, i) /= dflt_real &
+                                                    .and. Re_visc_nn(q, i) > sgm_eps) then
+                                                    Re_visc(i) = Re_visc(i) + &
+                                                        alpha_visc(q)/Re_visc_nn(q, i)
+                                                end if
+                                            end do
+                                            Re_visc(i) = 1._wp/max(Re_visc(i), sgm_eps)
+                                        end do
+                                    end if
                                 end if
                             end if
 
@@ -507,6 +575,27 @@ contains
                                         Re_visc(i) = 1._wp/max(Re_visc(i), sgm_eps)
 
                                     end do
+
+                                    ! Non-Newtonian viscosity override
+                                    if (any_non_newtonian) then
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_visc, j, k, l, &
+                                            Re_visc_nn, grad_x_vf, &
+                                            grad_y_vf, grad_z_vf)
+                                        $:GPU_LOOP(parallelism='[seq]')
+                                        do i = 1, 2
+                                            Re_visc(i) = 0._wp
+                                            $:GPU_LOOP(parallelism='[seq]')
+                                            do q = 1, num_fluids
+                                                if (Re_visc_nn(q, i) /= dflt_real &
+                                                    .and. Re_visc_nn(q, i) > sgm_eps) then
+                                                    Re_visc(i) = Re_visc(i) + &
+                                                        alpha_visc(q)/Re_visc_nn(q, i)
+                                                end if
+                                            end do
+                                            Re_visc(i) = 1._wp/max(Re_visc(i), sgm_eps)
+                                        end do
+                                    end if
                                 end if
                             end if
 
@@ -1584,6 +1673,191 @@ contains
         end if
 
     end subroutine s_compute_viscous_stress_tensor
+
+    !> Computes the viscosity gradient correction term for non-Newtonian fluids.
+    !! For variable viscosity: div(mu*S) = mu*div(S) + grad(mu)·S
+    !! This routine adds the grad(mu)·S term that MFC's constant-viscosity
+    !! formulation is missing. Only executed when any_non_newtonian = .true.
+    !!
+    !! PHASE-BASED APPROACH: For multi-phase flows, we compute per-phase viscosity
+    !! gradients and weight them by volume fraction:
+    !!   correction = sum_q alpha_q * 2 * (grad(mu_q) . S)
+    !!
+    !! @param q_prim_vf Cell-averaged primitive variables
+    !! @param dq_prim_dx_vf Cell-averaged x-derivatives of velocity
+    !! @param dq_prim_dy_vf Cell-averaged y-derivatives of velocity
+    !! @param dq_prim_dz_vf Cell-averaged z-derivatives of velocity
+    !! @param rhs_vf Cell-averaged RHS variables (to be corrected)
+    !! @param ix, iy, iz Index bounds
+    subroutine s_compute_viscous_gradient_correction(q_prim_vf, &
+                                                      dq_prim_dx_vf, dq_prim_dy_vf, dq_prim_dz_vf, &
+                                                      rhs_vf, ix, iy, iz)
+
+        type(scalar_field), dimension(sys_size), intent(in) :: q_prim_vf
+        type(scalar_field), dimension(sys_size), intent(in) :: dq_prim_dx_vf, dq_prim_dy_vf, dq_prim_dz_vf
+        type(scalar_field), dimension(sys_size), intent(inout) :: rhs_vf
+        type(int_bounds_info), intent(in) :: ix, iy, iz
+
+        ! Local variables - per-phase viscosities
+        #:if not MFC_CASE_OPTIMIZATION and USING_AMD
+            real(wp), dimension(3) :: mu_shear_phases, mu_bulk_phases
+            real(wp), dimension(3) :: mu_shear_phases_xp, mu_shear_phases_xm
+            real(wp), dimension(3) :: mu_shear_phases_yp, mu_shear_phases_ym
+            real(wp), dimension(3) :: mu_shear_phases_zp, mu_shear_phases_zm
+            real(wp), dimension(3) :: dmu_dx_phases, dmu_dy_phases, dmu_dz_phases
+            real(wp), dimension(3) :: alpha_visc
+        #:else
+            real(wp), dimension(num_fluids) :: mu_shear_phases, mu_bulk_phases
+            real(wp), dimension(num_fluids) :: mu_shear_phases_xp, mu_shear_phases_xm
+            real(wp), dimension(num_fluids) :: mu_shear_phases_yp, mu_shear_phases_ym
+            real(wp), dimension(num_fluids) :: mu_shear_phases_zp, mu_shear_phases_zm
+            real(wp), dimension(num_fluids) :: dmu_dx_phases, dmu_dy_phases, dmu_dz_phases
+            real(wp), dimension(num_fluids) :: alpha_visc
+        #:endif
+        real(wp) :: du_dx, du_dy, du_dz, dv_dx, dv_dy, dv_dz, dw_dx, dw_dy, dw_dz
+        real(wp) :: div_u
+        real(wp) :: S_xx, S_yy, S_zz, S_xy, S_xz, S_yz
+        real(wp) :: corr_mom_x, corr_mom_y, corr_mom_z, corr_energy
+        real(wp) :: phase_corr_x, phase_corr_y, phase_corr_z
+        real(wp) :: u_vel, v_vel, w_vel
+        integer :: j, k, l, i, q
+
+        ! Only proceed if any fluid is non-Newtonian
+        if (.not. any_non_newtonian) return
+
+        $:GPU_PARALLEL_LOOP(collapse=3, private='[mu_shear_phases, mu_bulk_phases, alpha_visc, mu_shear_phases_xp, mu_shear_phases_xm, mu_shear_phases_yp, mu_shear_phases_ym, mu_shear_phases_zp, mu_shear_phases_zm, dmu_dx_phases, dmu_dy_phases, dmu_dz_phases, du_dx, du_dy, du_dz, dv_dx, dv_dy, dv_dz, dw_dx, dw_dy, dw_dz, div_u, S_xx, S_yy, S_zz, S_xy, S_xz, S_yz, corr_mom_x, corr_mom_y, corr_mom_z, corr_energy, phase_corr_x, phase_corr_y, phase_corr_z, u_vel, v_vel, w_vel, i, q]')
+        do l = iz%beg, iz%end
+            do k = iy%beg, iy%end
+                do j = ix%beg, ix%end
+
+                    ! Get volume fractions at this cell
+                    $:GPU_LOOP(parallelism='[seq]')
+                    do i = 1, num_fluids
+                        if (bubbles_euler .and. num_fluids == 1) then
+                            alpha_visc(i) = 1._wp - q_prim_vf(E_idx + i)%sf(j, k, l)
+                        else
+                            alpha_visc(i) = q_prim_vf(E_idx + i)%sf(j, k, l)
+                        end if
+                    end do
+
+                    ! Initialize per-phase gradients to zero
+                    $:GPU_LOOP(parallelism='[seq]')
+                    do q = 1, num_fluids
+                        dmu_dx_phases(q) = 0._wp
+                        dmu_dy_phases(q) = 0._wp
+                        dmu_dz_phases(q) = 0._wp
+                    end do
+
+                    ! ===== X-DIRECTION GRADIENT =====
+                    if (j > 0 .and. j < m) then
+                        call s_compute_phase_viscosity_at_cell(q_prim_vf, j + 1, k, l, mu_shear_phases_xp, mu_bulk_phases)
+                        call s_compute_phase_viscosity_at_cell(q_prim_vf, j - 1, k, l, mu_shear_phases_xm, mu_bulk_phases)
+                        $:GPU_LOOP(parallelism='[seq]')
+                        do q = 1, num_fluids
+                            dmu_dx_phases(q) = (mu_shear_phases_xp(q) - mu_shear_phases_xm(q))/(x_cc(j + 1) - x_cc(j - 1))
+                        end do
+                    end if
+
+                    ! ===== Y-DIRECTION GRADIENT =====
+                    if (n > 0 .and. k > 0 .and. k < n) then
+                        call s_compute_phase_viscosity_at_cell(q_prim_vf, j, k + 1, l, mu_shear_phases_yp, mu_bulk_phases)
+                        call s_compute_phase_viscosity_at_cell(q_prim_vf, j, k - 1, l, mu_shear_phases_ym, mu_bulk_phases)
+                        $:GPU_LOOP(parallelism='[seq]')
+                        do q = 1, num_fluids
+                            dmu_dy_phases(q) = (mu_shear_phases_yp(q) - mu_shear_phases_ym(q))/(y_cc(k + 1) - y_cc(k - 1))
+                        end do
+                    end if
+
+                    ! ===== Z-DIRECTION GRADIENT =====
+                    if (p > 0 .and. l > 0 .and. l < p) then
+                        call s_compute_phase_viscosity_at_cell(q_prim_vf, j, k, l + 1, mu_shear_phases_zp, mu_bulk_phases)
+                        call s_compute_phase_viscosity_at_cell(q_prim_vf, j, k, l - 1, mu_shear_phases_zm, mu_bulk_phases)
+                        $:GPU_LOOP(parallelism='[seq]')
+                        do q = 1, num_fluids
+                            dmu_dz_phases(q) = (mu_shear_phases_zp(q) - mu_shear_phases_zm(q))/(z_cc(l + 1) - z_cc(l - 1))
+                        end do
+                    end if
+
+                    ! ===== GET VELOCITY GRADIENTS =====
+                    du_dx = dq_prim_dx_vf(momxb)%sf(j, k, l)
+                    if (n > 0) then
+                        du_dy = dq_prim_dy_vf(momxb)%sf(j, k, l)
+                        dv_dx = dq_prim_dx_vf(momxb + 1)%sf(j, k, l)
+                        dv_dy = dq_prim_dy_vf(momxb + 1)%sf(j, k, l)
+                    else
+                        du_dy = 0._wp; dv_dx = 0._wp; dv_dy = 0._wp
+                    end if
+                    if (p > 0) then
+                        du_dz = dq_prim_dz_vf(momxb)%sf(j, k, l)
+                        dv_dz = dq_prim_dz_vf(momxb + 1)%sf(j, k, l)
+                        dw_dx = dq_prim_dx_vf(momxb + 2)%sf(j, k, l)
+                        dw_dy = dq_prim_dy_vf(momxb + 2)%sf(j, k, l)
+                        dw_dz = dq_prim_dz_vf(momxb + 2)%sf(j, k, l)
+                    else
+                        du_dz = 0._wp; dv_dz = 0._wp
+                        dw_dx = 0._wp; dw_dy = 0._wp; dw_dz = 0._wp
+                    end if
+
+                    ! ===== COMPUTE STRAIN RATE TENSOR =====
+                    div_u = du_dx + dv_dy + dw_dz
+                    ! Deviatoric strain rate: S_ij = (du_i/dx_j + du_j/dx_i)/2 - (1/3)*div(u)*delta_ij
+                    S_xx = du_dx - (1._wp/3._wp)*div_u
+                    S_yy = dv_dy - (1._wp/3._wp)*div_u
+                    S_zz = dw_dz - (1._wp/3._wp)*div_u
+                    S_xy = 0.5_wp*(du_dy + dv_dx)
+                    S_xz = 0.5_wp*(du_dz + dw_dx)
+                    S_yz = 0.5_wp*(dv_dz + dw_dy)
+
+                    ! ===== COMPUTE PHASE-WEIGHTED CORRECTION =====
+                    ! correction = sum_q alpha_q * 2 * (grad(mu_q) . S)
+                    corr_mom_x = 0._wp
+                    corr_mom_y = 0._wp
+                    corr_mom_z = 0._wp
+
+                    $:GPU_LOOP(parallelism='[seq]')
+                    do q = 1, num_fluids
+                        ! Per-phase correction: 2 * (dmu_q/dx_j * S_ij)
+                        phase_corr_x = 2._wp*(dmu_dx_phases(q)*S_xx + dmu_dy_phases(q)*S_xy + dmu_dz_phases(q)*S_xz)
+                        phase_corr_y = 2._wp*(dmu_dx_phases(q)*S_xy + dmu_dy_phases(q)*S_yy + dmu_dz_phases(q)*S_yz)
+                        phase_corr_z = 2._wp*(dmu_dx_phases(q)*S_xz + dmu_dy_phases(q)*S_yz + dmu_dz_phases(q)*S_zz)
+
+                        ! Weight by volume fraction and accumulate
+                        corr_mom_x = corr_mom_x + alpha_visc(q)*phase_corr_x
+                        corr_mom_y = corr_mom_y + alpha_visc(q)*phase_corr_y
+                        corr_mom_z = corr_mom_z + alpha_visc(q)*phase_corr_z
+                    end do
+
+                    ! ===== ENERGY CORRECTION =====
+                    u_vel = q_prim_vf(momxb)%sf(j, k, l)
+                    if (n > 0) then
+                        v_vel = q_prim_vf(momxb + 1)%sf(j, k, l)
+                    else
+                        v_vel = 0._wp
+                    end if
+                    if (p > 0) then
+                        w_vel = q_prim_vf(momxb + 2)%sf(j, k, l)
+                    else
+                        w_vel = 0._wp
+                    end if
+
+                    corr_energy = u_vel*corr_mom_x + v_vel*corr_mom_y + w_vel*corr_mom_z
+
+                    ! ===== ADD CORRECTIONS TO RHS =====
+                    rhs_vf(momxb)%sf(j, k, l) = rhs_vf(momxb)%sf(j, k, l) + corr_mom_x
+                    if (n > 0) then
+                        rhs_vf(momxb + 1)%sf(j, k, l) = rhs_vf(momxb + 1)%sf(j, k, l) + corr_mom_y
+                    end if
+                    if (p > 0) then
+                        rhs_vf(momxb + 2)%sf(j, k, l) = rhs_vf(momxb + 2)%sf(j, k, l) + corr_mom_z
+                    end if
+                    rhs_vf(E_idx)%sf(j, k, l) = rhs_vf(E_idx)%sf(j, k, l) + corr_energy
+
+                end do
+            end do
+        end do
+        $:END_GPU_PARALLEL_LOOP()
+
+    end subroutine s_compute_viscous_gradient_correction
 
     impure subroutine s_finalize_viscous_module()
 

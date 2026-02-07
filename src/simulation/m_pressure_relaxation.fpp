@@ -287,6 +287,22 @@ contains
                     end do
                     Re(i) = 1._wp/max(Re(i), sgm_eps)
                 end do
+
+                ! Non-Newtonian: use mu_max for conservative estimate
+                if (any_non_newtonian) then
+                    $:GPU_LOOP(parallelism='[seq]')
+                    do i = 1, num_fluids
+                        if (fluid_pp(i)%non_newtonian) then
+                            if (fluid_pp(i)%mu_max < dflt_real .and. &
+                                fluid_pp(i)%mu_max > sgm_eps) then
+                                Re(1) = min(Re(1), 1._wp/fluid_pp(i)%mu_max)
+                            end if
+                            if (fluid_pp(i)%mu_bulk > sgm_eps) then
+                                Re(2) = min(Re(2), 1._wp/fluid_pp(i)%mu_bulk)
+                            end if
+                        end if
+                    end do
+                end if
             end if
         end if
 

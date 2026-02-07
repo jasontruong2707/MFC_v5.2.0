@@ -292,6 +292,23 @@ contains
 
                 Re_K(i) = 1._wp/max(Re_K(i), sgm_eps)
             end do
+
+            ! Non-Newtonian: use mu_max for conservative CFL estimate
+            if (any_non_newtonian) then
+                do i = 1, num_fluids
+                    if (fluid_pp(i)%non_newtonian) then
+                        ! Shear: use mu_max as conservative upper bound
+                        if (fluid_pp(i)%mu_max < dflt_real .and. &
+                            fluid_pp(i)%mu_max > sgm_eps) then
+                            Re_K(1) = min(Re_K(1), 1._wp/fluid_pp(i)%mu_max)
+                        end if
+                        ! Bulk: use mu_bulk if specified
+                        if (fluid_pp(i)%mu_bulk > sgm_eps) then
+                            Re_K(2) = min(Re_K(2), 1._wp/fluid_pp(i)%mu_bulk)
+                        end if
+                    end if
+                end do
+            end if
         end if
 #endif
 
@@ -386,6 +403,23 @@ contains
 
                 Re_K(i) = 1._wp/max(Re_K(i), sgm_eps)
             end do
+
+            ! Non-Newtonian: use mu_max for conservative CFL estimate
+            if (any_non_newtonian) then
+                do i = 1, num_fluids
+                    if (fluid_pp(i)%non_newtonian) then
+                        ! Shear: use mu_max as conservative upper bound
+                        if (fluid_pp(i)%mu_max < dflt_real .and. &
+                            fluid_pp(i)%mu_max > sgm_eps) then
+                            Re_K(1) = min(Re_K(1), 1._wp/fluid_pp(i)%mu_max)
+                        end if
+                        ! Bulk: use mu_bulk if specified
+                        if (fluid_pp(i)%mu_bulk > sgm_eps) then
+                            Re_K(2) = min(Re_K(2), 1._wp/fluid_pp(i)%mu_bulk)
+                        end if
+                    end if
+                end do
+            end if
         end if
 #endif
 

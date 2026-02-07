@@ -736,6 +736,9 @@ def _load():  # pylint: disable=too-many-locals,too-many-statements
         _r(f"{px}G", REAL, {"elasticity"})
         for j in [1, 2]:
             _r(f"{px}Re({j})", REAL, {"viscosity"})
+        _r(f"{px}non_newtonian", LOG, {"viscosity"})
+        for a in ["tau0", "K", "nn", "mu_max", "mu_min", "mu_bulk", "hb_m"]:
+            _r(f"{px}{a}", REAL, {"viscosity"})
 
     # --- bub_pp (bubble properties) ---
     for a in ["R0ref", "p0ref", "rho0ref", "T0ref", "ss", "pv", "vd",
