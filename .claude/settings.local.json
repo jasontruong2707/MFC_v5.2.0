@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(xargs grep -l \"reactive\\\\|combustion\\\\|flame\")",
+      "Bash(grep -l \"s_dirichlet\\\\|BC_DIRICHLET\" \"c:\\\\Users\\\\ASUS\\\\MFC\\\\src\\\\simulation\"/*.fpp)",
+      "Bash(grep -l \"patch_bc\" \"c:\\\\Users\\\\ASUS\\\\MFC\\\\src\\\\pre_process\"/*.fpp)",
+      "Bash(grep -n \"read.*patch_bc\\\\|patch_bc.*read\" \"c:\\\\Users\\\\ASUS\\\\MFC\\\\src\\\\pre_process\"/*.fpp)",
+      "Bash(grep -l \"patch_bc\" \"c:\\\\Users\\\\ASUS\\\\MFC\\\\examples\"/*/*.inp)"
+    ]
+  }
+}

@@ -117,8 +117,8 @@ module m_riemann_solvers
     real(wp), allocatable, dimension(:) :: Gs_rs
     $:GPU_DECLARE(create='[Gs_rs]')
 
-    real(wp), allocatable, dimension(:, :) :: Res_gs
-    $:GPU_DECLARE(create='[Res_gs]')
+    ! Note: Static Res_gs array removed - s_compute_re_visc handles
+    ! both Newtonian and non-Newtonian cases dynamically
 
 contains
 
@@ -471,37 +471,27 @@ contains
                             end do
 
                             if (viscous) then
-                                $:GPU_LOOP(parallelism='[seq]')
-                                do i = 1, 2
-                                    Re_L(i) = dflt_real
-                                    Re_R(i) = dflt_real
-
-                                    if (Re_size(i) > 0) Re_L(i) = 0._wp
-                                    if (Re_size(i) > 0) Re_R(i) = 0._wp
-
-                                    $:GPU_LOOP(parallelism='[seq]')
-                                    do q = 1, Re_size(i)
-                                        Re_L(i) = alpha_L(Re_idx(i, q))/Res_gs(i, q) &
-                                                  + Re_L(i)
-                                        Re_R(i) = alpha_R(Re_idx(i, q))/Res_gs(i, q) &
-                                                  + Re_R(i)
-                                    end do
-
-                                    Re_L(i) = 1._wp/max(Re_L(i), sgm_eps)
-                                    Re_R(i) = 1._wp/max(Re_R(i), sgm_eps)
-                                end do
-
-                                ! Non-Newtonian viscosity override
-                                if (any_non_newtonian) then
+                                ! Map rotated (j,k,l) to physical (x,y,z) indices
+                                #:if NORM_DIR == 1
                                     call s_compute_re_visc(q_prim_vf, &
                                         alpha_L, j, k, l, Re_visc_per_phase_L)
                                     call s_compute_re_visc(q_prim_vf, &
                                         alpha_R, j + 1, k, l, Re_visc_per_phase_R)
-                                    call s_compute_mixture_re( &
-                                        alpha_L, Re_visc_per_phase_L, Re_L)
-                                    call s_compute_mixture_re( &
-                                        alpha_R, Re_visc_per_phase_R, Re_R)
-                                end if
+                                #:elif NORM_DIR == 2
+                                    call s_compute_re_visc(q_prim_vf, &
+                                        alpha_L, k, j, l, Re_visc_per_phase_L)
+                                    call s_compute_re_visc(q_prim_vf, &
+                                        alpha_R, k, j + 1, l, Re_visc_per_phase_R)
+                                #:else
+                                    call s_compute_re_visc(q_prim_vf, &
+                                        alpha_L, l, k, j, Re_visc_per_phase_L)
+                                    call s_compute_re_visc(q_prim_vf, &
+                                        alpha_R, l, k, j + 1, Re_visc_per_phase_R)
+                                #:endif
+                                call s_compute_mixture_re( &
+                                    alpha_L, Re_visc_per_phase_L, Re_L)
+                                call s_compute_mixture_re( &
+                                    alpha_R, Re_visc_per_phase_R, Re_R)
                             end if
 
                             if (chemistry) then
@@ -1283,37 +1273,27 @@ contains
                             end do
 
                             if (viscous) then
-                                $:GPU_LOOP(parallelism='[seq]')
-                                do i = 1, 2
-                                    Re_L(i) = dflt_real
-                                    Re_R(i) = dflt_real
-
-                                    if (Re_size(i) > 0) Re_L(i) = 0._wp
-                                    if (Re_size(i) > 0) Re_R(i) = 0._wp
-
-                                    $:GPU_LOOP(parallelism='[seq]')
-                                    do q = 1, Re_size(i)
-                                        Re_L(i) = alpha_L(Re_idx(i, q))/Res_gs(i, q) &
-                                                  + Re_L(i)
-                                        Re_R(i) = alpha_R(Re_idx(i, q))/Res_gs(i, q) &
-                                                  + Re_R(i)
-                                    end do
-
-                                    Re_L(i) = 1._wp/max(Re_L(i), sgm_eps)
-                                    Re_R(i) = 1._wp/max(Re_R(i), sgm_eps)
-                                end do
-
-                                ! Non-Newtonian viscosity override
-                                if (any_non_newtonian) then
+                                ! Map rotated (j,k,l) to physical (x,y,z) indices
+                                #:if NORM_DIR == 1
                                     call s_compute_re_visc(q_prim_vf, &
                                         alpha_L, j, k, l, Re_visc_per_phase_L)
                                     call s_compute_re_visc(q_prim_vf, &
                                         alpha_R, j + 1, k, l, Re_visc_per_phase_R)
-                                    call s_compute_mixture_re( &
-                                        alpha_L, Re_visc_per_phase_L, Re_L)
-                                    call s_compute_mixture_re( &
-                                        alpha_R, Re_visc_per_phase_R, Re_R)
-                                end if
+                                #:elif NORM_DIR == 2
+                                    call s_compute_re_visc(q_prim_vf, &
+                                        alpha_L, k, j, l, Re_visc_per_phase_L)
+                                    call s_compute_re_visc(q_prim_vf, &
+                                        alpha_R, k, j + 1, l, Re_visc_per_phase_R)
+                                #:else
+                                    call s_compute_re_visc(q_prim_vf, &
+                                        alpha_L, l, k, j, Re_visc_per_phase_L)
+                                    call s_compute_re_visc(q_prim_vf, &
+                                        alpha_R, l, k, j + 1, Re_visc_per_phase_R)
+                                #:endif
+                                call s_compute_mixture_re( &
+                                    alpha_L, Re_visc_per_phase_L, Re_L)
+                                call s_compute_mixture_re( &
+                                    alpha_R, Re_visc_per_phase_R, Re_R)
                             end if
 
                             if (chemistry) then
@@ -1781,37 +1761,14 @@ contains
                             end do
                         end if
 
-                        $:GPU_LOOP(parallelism='[seq]')
-                        do i = 1, 2
-                            Re_L(i) = dflt_real
-                            Re_R(i) = dflt_real
-
-                            if (Re_size(i) > 0) Re_L(i) = 0._wp
-                            if (Re_size(i) > 0) Re_R(i) = 0._wp
-
-                            $:GPU_LOOP(parallelism='[seq]')
-                            do q = 1, Re_size(i)
-                                Re_L(i) = alpha_L(Re_idx(i, q))/Res_gs(i, q) &
-                                          + Re_L(i)
-                                Re_R(i) = alpha_R(Re_idx(i, q))/Res_gs(i, q) &
-                                          + Re_R(i)
-                            end do
-
-                            Re_L(i) = 1._wp/max(Re_L(i), sgm_eps)
-                            Re_R(i) = 1._wp/max(Re_R(i), sgm_eps)
-                        end do
-
-                        ! Non-Newtonian viscosity override
-                        if (any_non_newtonian) then
-                            call s_compute_re_visc(q_prim_vf, &
-                                alpha_L, j, k, l, Re_visc_per_phase_L)
-                            call s_compute_re_visc(q_prim_vf, &
-                                alpha_R, j + 1, k, l, Re_visc_per_phase_R)
-                            call s_compute_mixture_re( &
-                                alpha_L, Re_visc_per_phase_L, Re_L)
-                            call s_compute_mixture_re( &
-                                alpha_R, Re_visc_per_phase_R, Re_R)
-                        end if
+                        call s_compute_re_visc(q_prim_vf, &
+                            alpha_L, j, k, l, Re_visc_per_phase_L)
+                        call s_compute_re_visc(q_prim_vf, &
+                            alpha_R, idx_right_phys(1), idx_right_phys(2), idx_right_phys(3), Re_visc_per_phase_R)
+                        call s_compute_mixture_re( &
+                            alpha_L, Re_visc_per_phase_L, Re_L)
+                        call s_compute_mixture_re( &
+                            alpha_R, Re_visc_per_phase_R, Re_R)
 
                         if (shear_stress) then
 
@@ -2223,34 +2180,27 @@ contains
                                 end do
 
                                 if (viscous) then
-                                    $:GPU_LOOP(parallelism='[seq]')
-                                    do i = 1, 2
-                                        Re_L(i) = dflt_real
-                                        Re_R(i) = dflt_real
-                                        if (Re_size(i) > 0) Re_L(i) = 0._wp
-                                        if (Re_size(i) > 0) Re_R(i) = 0._wp
-                                        $:GPU_LOOP(parallelism='[seq]')
-                                        do q = 1, Re_size(i)
-                                            Re_L(i) = qL_prim_rs${XYZ}$_vf(j, k, l, E_idx + Re_idx(i, q))/Res_gs(i, q) &
-                                                      + Re_L(i)
-                                            Re_R(i) = qR_prim_rs${XYZ}$_vf(j + 1, k, l, E_idx + Re_idx(i, q))/Res_gs(i, q) &
-                                                      + Re_R(i)
-                                        end do
-                                        Re_L(i) = 1._wp/max(Re_L(i), sgm_eps)
-                                        Re_R(i) = 1._wp/max(Re_R(i), sgm_eps)
-                                    end do
-
-                                    ! Non-Newtonian viscosity override
-                                    if (any_non_newtonian) then
+                                    ! Map rotated (j,k,l) to physical (x,y,z) indices
+                                    #:if NORM_DIR == 1
                                         call s_compute_re_visc(q_prim_vf, &
                                             alpha_L, j, k, l, Re_visc_per_phase_L)
                                         call s_compute_re_visc(q_prim_vf, &
                                             alpha_R, j + 1, k, l, Re_visc_per_phase_R)
-                                        call s_compute_mixture_re( &
-                                            alpha_L, Re_visc_per_phase_L, Re_L)
-                                        call s_compute_mixture_re( &
-                                            alpha_R, Re_visc_per_phase_R, Re_R)
-                                    end if
+                                    #:elif NORM_DIR == 2
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_L, k, j, l, Re_visc_per_phase_L)
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_R, k, j + 1, l, Re_visc_per_phase_R)
+                                    #:else
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_L, l, k, j, Re_visc_per_phase_L)
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_R, l, k, j + 1, Re_visc_per_phase_R)
+                                    #:endif
+                                    call s_compute_mixture_re( &
+                                        alpha_L, Re_visc_per_phase_L, Re_L)
+                                    call s_compute_mixture_re( &
+                                        alpha_R, Re_visc_per_phase_R, Re_R)
                                 end if
 
                                 E_L = gamma_L*pres_L + pi_inf_L + 5.e-1_wp*rho_L*vel_L_rms + qv_L
@@ -2877,38 +2827,27 @@ contains
 
                                 if (viscous) then
                                     if (num_fluids == 1) then ! Need to consider case with num_fluids >= 2
-                                        $:GPU_LOOP(parallelism='[seq]')
-                                        do i = 1, 2
-                                            Re_L(i) = dflt_real
-                                            Re_R(i) = dflt_real
-
-                                            if (Re_size(i) > 0) Re_L(i) = 0._wp
-                                            if (Re_size(i) > 0) Re_R(i) = 0._wp
-
-                                            $:GPU_LOOP(parallelism='[seq]')
-                                            do q = 1, Re_size(i)
-                                                Re_L(i) = (1._wp - qL_prim_rs${XYZ}$_vf(j, k, l, E_idx + Re_idx(i, q)))/Res_gs(i, q) &
-                                                          + Re_L(i)
-                                                Re_R(i) = (1._wp - qR_prim_rs${XYZ}$_vf(j + 1, k, l, E_idx + Re_idx(i, q)))/Res_gs(i, q) &
-                                                          + Re_R(i)
-                                            end do
-
-                                            Re_L(i) = 1._wp/max(Re_L(i), sgm_eps)
-                                            Re_R(i) = 1._wp/max(Re_R(i), sgm_eps)
-
-                                        end do
-
-                                        ! Non-Newtonian viscosity override
-                                        if (any_non_newtonian) then
+                                        ! Map rotated (j,k,l) to physical (x,y,z) indices
+                                        #:if NORM_DIR == 1
                                             call s_compute_re_visc(q_prim_vf, &
                                                 alpha_L, j, k, l, Re_visc_per_phase_L)
                                             call s_compute_re_visc(q_prim_vf, &
                                                 alpha_R, j + 1, k, l, Re_visc_per_phase_R)
-                                            call s_compute_mixture_re( &
-                                                alpha_L, Re_visc_per_phase_L, Re_L)
-                                            call s_compute_mixture_re( &
-                                                alpha_R, Re_visc_per_phase_R, Re_R)
-                                        end if
+                                        #:elif NORM_DIR == 2
+                                            call s_compute_re_visc(q_prim_vf, &
+                                                alpha_L, k, j, l, Re_visc_per_phase_L)
+                                            call s_compute_re_visc(q_prim_vf, &
+                                                alpha_R, k, j + 1, l, Re_visc_per_phase_R)
+                                        #:else
+                                            call s_compute_re_visc(q_prim_vf, &
+                                                alpha_L, l, k, j, Re_visc_per_phase_L)
+                                            call s_compute_re_visc(q_prim_vf, &
+                                                alpha_R, l, k, j + 1, Re_visc_per_phase_R)
+                                        #:endif
+                                        call s_compute_mixture_re( &
+                                            alpha_L, Re_visc_per_phase_L, Re_L)
+                                        call s_compute_mixture_re( &
+                                            alpha_R, Re_visc_per_phase_R, Re_R)
                                     end if
                                 end if
 
@@ -3327,34 +3266,27 @@ contains
                                 if (Re_size(2) > 0) Re_max = 2
 
                                 if (viscous) then
-                                    $:GPU_LOOP(parallelism='[seq]')
-                                    do i = 1, Re_max
-                                        Re_L(i) = 0._wp
-                                        Re_R(i) = 0._wp
-
-                                        $:GPU_LOOP(parallelism='[seq]')
-                                        do q = 1, Re_size(i)
-                                            Re_L(i) = alpha_L(Re_idx(i, q))/Res_gs(i, q) &
-                                                      + Re_L(i)
-                                            Re_R(i) = alpha_R(Re_idx(i, q))/Res_gs(i, q) &
-                                                      + Re_R(i)
-                                        end do
-
-                                        Re_L(i) = 1._wp/max(Re_L(i), sgm_eps)
-                                        Re_R(i) = 1._wp/max(Re_R(i), sgm_eps)
-                                    end do
-
-                                    ! Non-Newtonian viscosity override
-                                    if (any_non_newtonian) then
+                                    ! Map rotated (j,k,l) to physical (x,y,z) indices
+                                    #:if NORM_DIR == 1
                                         call s_compute_re_visc(q_prim_vf, &
                                             alpha_L, j, k, l, Re_visc_per_phase_L)
                                         call s_compute_re_visc(q_prim_vf, &
                                             alpha_R, j + 1, k, l, Re_visc_per_phase_R)
-                                        call s_compute_mixture_re( &
-                                            alpha_L, Re_visc_per_phase_L, Re_L)
-                                        call s_compute_mixture_re( &
-                                            alpha_R, Re_visc_per_phase_R, Re_R)
-                                    end if
+                                    #:elif NORM_DIR == 2
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_L, k, j, l, Re_visc_per_phase_L)
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_R, k, j + 1, l, Re_visc_per_phase_R)
+                                    #:else
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_L, l, k, j, Re_visc_per_phase_L)
+                                        call s_compute_re_visc(q_prim_vf, &
+                                            alpha_R, l, k, j + 1, Re_visc_per_phase_R)
+                                    #:endif
+                                    call s_compute_mixture_re( &
+                                        alpha_L, Re_visc_per_phase_L, Re_L)
+                                    call s_compute_mixture_re( &
+                                        alpha_R, Re_visc_per_phase_R, Re_R)
                                 end if
 
                                 if (chemistry) then
@@ -4070,16 +4002,7 @@ contains
         $:GPU_UPDATE(device='[Gs_rs]')
 
         if (viscous) then
-            @:ALLOCATE(Res_gs(1:2, 1:Re_size_max))
-        end if
-
-        if (viscous) then
-            do i = 1, 2
-                do j = 1, Re_size(i)
-                    Res_gs(i, j) = fluid_pp(Re_idx(i, j))%Re(i)
-                end do
-            end do
-            $:GPU_UPDATE(device='[Res_gs,Re_idx,Re_size]')
+            $:GPU_UPDATE(device='[Re_idx,Re_size]')
         end if
 
         $:GPU_ENTER_DATA(copyin='[is1,is2,is3,isx,isy,isz]')

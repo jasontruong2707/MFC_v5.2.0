@@ -747,35 +747,6 @@ contains
             call nvtxEndRange
         end if
 
-        ! Add viscosity gradient correction for non-Newtonian fluids
-        ! This computes the grad(mu).S term missing from constant-viscosity formulation
-        if (viscous .and. any_non_newtonian .and. .not. igr) then
-            call nvtxStartRange("RHS-VISC-GRAD-CORR")
-            if (p > 0) then
-                call s_compute_viscous_gradient_correction(q_prim_qp%vf, &
-                                                           dq_prim_dx_qp(1)%vf, &
-                                                           dq_prim_dy_qp(1)%vf, &
-                                                           dq_prim_dz_qp(1)%vf, &
-                                                           rhs_vf, &
-                                                           idwint(1), idwint(2), idwint(3))
-            else if (n > 0) then
-                call s_compute_viscous_gradient_correction(q_prim_qp%vf, &
-                                                           dq_prim_dx_qp(1)%vf, &
-                                                           dq_prim_dy_qp(1)%vf, &
-                                                           dq_prim_dy_qp(1)%vf, &
-                                                           rhs_vf, &
-                                                           idwint(1), idwint(2), idwint(3))
-            else
-                call s_compute_viscous_gradient_correction(q_prim_qp%vf, &
-                                                           dq_prim_dx_qp(1)%vf, &
-                                                           dq_prim_dx_qp(1)%vf, &
-                                                           dq_prim_dx_qp(1)%vf, &
-                                                           rhs_vf, &
-                                                           idwint(1), idwint(2), idwint(3))
-            end if
-            call nvtxEndRange
-        end if
-
         if (surface_tension) then
             call nvtxStartRange("RHS-SURFACE-TENSION")
             call s_get_capillary(q_prim_qp%vf, bc_type)

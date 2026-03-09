@@ -21,12 +21,13 @@ eps = 1e-6
 
 # HB model parameters
 tau0 = 0.0         # Yield stress (set to 0 for power-law fluid)
-K = 0.003536          # Consistency index
-nn = 0.5           # Flow behavior index (shear-thinning)
-mu_min = 1.118e-5      # Minimum viscosity bound
-mu_max = 0.003535      # Maximum viscosity bound
+K = 0.007071          # Consistency index
+nn = 1.5           # Flow behavior index
+mu_min = 0.000707107      # Minimum viscosity bound
+mu_max = 2.236067977      # Maximum viscosity bound
 hb_m = 1000.0      # Papanastasiou regularization parameter
 mu_bulk = 0.0
+lid_velocity = 0.5 # Lid velocity for the top wall (m/s)
 
 # Equivalent Newtonian Re for reference viscosity (K gives mu ~ K when gdot ~ 1)
 # Re = 1/mu = 1/K = 1e4
@@ -75,7 +76,7 @@ print(
             "bc_x%end": -16,
             "bc_y%beg": -16,
             "bc_y%end": -16,
-            "bc_y%ve1": 0.5,
+            "bc_y%ve1": lid_velocity,
             "viscous": "T",
             # Formatted Database Files Structure Parameters
             "format": 1,
@@ -92,7 +93,7 @@ print(
             "patch_icpp(1)%length_y": 1.0,
             "patch_icpp(1)%vel(1)": 0,
             "patch_icpp(1)%vel(2)": 0.0,
-            "patch_icpp(1)%pres": 5,
+            "patch_icpp(1)%pres": 1e5,
             "patch_icpp(1)%alpha_rho(1)": 0.5,
             "patch_icpp(1)%alpha(1)": 0.5,
             "patch_icpp(1)%alpha_rho(2)": 0.5,

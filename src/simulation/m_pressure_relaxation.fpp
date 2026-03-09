@@ -20,34 +20,19 @@ module m_pressure_relaxation
  s_initialize_pressure_relaxation_module, &
  s_finalize_pressure_relaxation_module
 
-    real(wp), allocatable, dimension(:, :) :: Res_pr
-    $:GPU_DECLARE(create='[Res_pr]')
-
 contains
 
     !> Initialize the pressure relaxation module
     impure subroutine s_initialize_pressure_relaxation_module
 
-        integer :: i, j
-
-        if (viscous) then
-            @:ALLOCATE(Res_pr(1:2, 1:Re_size_max))
-            do i = 1, 2
-                do j = 1, Re_size(i)
-                    Res_pr(i, j) = fluid_pp(Re_idx(i, j))%Re(i)
-                end do
-            end do
-            $:GPU_UPDATE(device='[Res_pr, Re_idx, Re_size]')
-        end if
+        ! Nothing to initialize - Re is computed dynamically via m_re_visc
 
     end subroutine s_initialize_pressure_relaxation_module
 
     !> Finalize the pressure relaxation module
     impure subroutine s_finalize_pressure_relaxation_module
 
-        if (viscous) then
-            @:DEALLOCATE(Res_pr)
-        end if
+        ! Nothing to finalize
 
     end subroutine s_finalize_pressure_relaxation_module
 
@@ -223,8 +208,7 @@ contains
             real(wp), dimension(num_fluids) :: alpha_rho, alpha
         #:endif
         real(wp) :: rho, dyn_pres, gamma, pi_inf, pres_relax, sum_alpha
-        real(wp), dimension(2) :: Re
-        integer :: i, q
+        integer :: i
 
         $:GPU_LOOP(parallelism='[seq]')
         do i = 1, num_fluids
@@ -275,35 +259,6 @@ contains
                 gamma = gamma + alpha(i)*gammas(i)
                 pi_inf = pi_inf + alpha(i)*pi_infs(i)
             end do
-
-            if (viscous) then
-                $:GPU_LOOP(parallelism='[seq]')
-                do i = 1, 2
-                    Re(i) = dflt_real
-                    if (Re_size(i) > 0) Re(i) = 0._wp
-                    $:GPU_LOOP(parallelism='[seq]')
-                    do q = 1, Re_size(i)
-                        Re(i) = alpha(Re_idx(i, q))/Res_pr(i, q) + Re(i)
-                    end do
-                    Re(i) = 1._wp/max(Re(i), sgm_eps)
-                end do
-
-                ! Non-Newtonian: use mu_max for conservative estimate
-                if (any_non_newtonian) then
-                    $:GPU_LOOP(parallelism='[seq]')
-                    do i = 1, num_fluids
-                        if (fluid_pp(i)%non_newtonian) then
-                            if (fluid_pp(i)%mu_max < dflt_real .and. &
-                                fluid_pp(i)%mu_max > sgm_eps) then
-                                Re(1) = min(Re(1), 1._wp/fluid_pp(i)%mu_max)
-                            end if
-                            if (fluid_pp(i)%mu_bulk > sgm_eps) then
-                                Re(2) = min(Re(2), 1._wp/fluid_pp(i)%mu_bulk)
-                            end if
-                        end if
-                    end do
-                end if
-            end if
         end if
 
         ! Compute dynamic pressure and update internal energies
