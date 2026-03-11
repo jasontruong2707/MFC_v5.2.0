@@ -182,6 +182,7 @@ contains
             cfl_adap_dt, cfl_const_dt, cfl_target, &
             surface_tension, bubbles_lagrange, lag_params, &
             hyperelasticity, R0ref, num_bc_patches, Bx0, &
+            bc_perturb_amp, bc_perturb_freq, &
             cont_damage, tau_star, cont_damage_s, alpha_bar, &
             hyper_cleaning, hyper_cleaning_speed, hyper_cleaning_tau, &
             alf_factor, num_igr_iters, num_igr_warm_start_iters, &
@@ -1123,6 +1124,7 @@ contains
         end if
 
         mytime = mytime + dt
+        $:GPU_UPDATE(device='[mytime]')
 
         ! Total-variation-diminishing (TVD) Runge-Kutta (RK) time-steppers
         if (any(time_stepper == (/1, 2, 3/))) then

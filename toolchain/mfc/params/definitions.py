@@ -644,6 +644,8 @@ def _load():  # pylint: disable=too-many-locals,too-many-statements
     for d in ["x", "y", "z"]:
         _r(f"bc_{d}%beg", INT, {"bc"})
         _r(f"bc_{d}%end", INT, {"bc"})
+    _r("bc_perturb_amp", REAL, {"bc"}, desc="Dirichlet BC sinusoidal velocity perturbation amplitude")
+    _r("bc_perturb_freq", REAL, {"bc"}, desc="Dirichlet BC sinusoidal velocity perturbation frequency (Hz)")
 
     # --- Relativity ---
     _r("relativity", LOG, {"relativity"})

@@ -525,6 +525,11 @@ module m_global_parameters
 
     real(wp) :: mytime       !< Current simulation time
     real(wp) :: finaltime    !< Final simulation time
+    $:GPU_DECLARE(create='[mytime]')
+
+    real(wp) :: bc_perturb_amp   !< Dirichlet BC velocity perturbation amplitude
+    real(wp) :: bc_perturb_freq  !< Dirichlet BC velocity perturbation frequency (Hz)
+    $:GPU_DECLARE(create='[bc_perturb_amp,bc_perturb_freq]')
 
     logical :: rdma_mpi
 
@@ -665,6 +670,8 @@ contains
 
         num_bc_patches = 0
         bc_io = .false.
+        bc_perturb_amp = 0._wp
+        bc_perturb_freq = 0._wp
 
         bc_x%beg = dflt_int; bc_x%end = dflt_int
         bc_y%beg = dflt_int; bc_y%end = dflt_int

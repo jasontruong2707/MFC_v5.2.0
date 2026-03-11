@@ -27,13 +27,12 @@ mu_min = 0.000707107      # Minimum viscosity bound
 mu_max = 2.236067977      # Maximum viscosity bound
 hb_m = 1000.0      # Papanastasiou regularization parameter
 mu_bulk = 0.0
-lid_velocity = 0.5 # Lid velocity for the top wall (m/s)
+lid_velocity = 0.5  # Lid velocity for the top wall (m/s)
 
 # Equivalent Newtonian Re for reference viscosity (K gives mu ~ K when gdot ~ 1)
 # Re = 1/mu = 1/K = 1e4
 
 #!/usr/bin/env python3
-import json
 
 eps = 1e-6
 # Configuring case dictionary
@@ -99,7 +98,7 @@ print(
             "patch_icpp(1)%alpha_rho(2)": 0.5,
             "patch_icpp(1)%alpha(2)": 0.5,
             # Fluids Physical Parameters
-            #Fluid 1: 
+            # Fluid 1:
             "fluid_pp(1)%gamma": 1.0 / (1.4 - 1.0),
             "fluid_pp(1)%pi_inf": 0.0,
             "fluid_pp(1)%Re(1)": 1000,
@@ -109,9 +108,9 @@ print(
             "fluid_pp(1)%nn": nn,
             "fluid_pp(1)%mu_max": mu_max,
             "fluid_pp(1)%mu_min": mu_min,
-            'fluid_pp(1)%mu_bulk': mu_bulk, 
+            'fluid_pp(1)%mu_bulk': mu_bulk,
             'fluid_pp(1)%hb_m': hb_m,
-            #Fluid 2: 
+            # Fluid 2:
             "fluid_pp(2)%gamma": 1.0 / (1.4 - 1.0),
             "fluid_pp(2)%pi_inf": 0.0,
             "fluid_pp(2)%Re(1)": 1000,
@@ -121,7 +120,7 @@ print(
             "fluid_pp(2)%nn": nn,
             "fluid_pp(2)%mu_max": mu_max,
             "fluid_pp(2)%mu_min": mu_min,
-            'fluid_pp(2)%mu_bulk': mu_bulk, 
+            'fluid_pp(2)%mu_bulk': mu_bulk,
             'fluid_pp(2)%hb_m': hb_m,
         }
     )

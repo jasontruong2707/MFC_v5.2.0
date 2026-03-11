@@ -1042,8 +1042,17 @@ contains
         integer, intent(in) :: k, l
 
         integer :: j, i
+        real(stp) :: vel_factor
 
 #ifdef MFC_SIMULATION
+        ! Compute velocity perturbation factor: 1 + amp * sin(2*pi*freq*t)
+        if (bc_perturb_amp > 0._wp .and. bc_perturb_freq > 0._wp) then
+            vel_factor = real(1._wp + bc_perturb_amp* &
+                              sin(2._wp*3.141592653589793_wp*bc_perturb_freq*mytime), stp)
+        else
+            vel_factor = 1._stp
+        end if
+
         if (bc_dir == 1) then !< x-direction
             if (bc_loc == -1) then !bc_x%beg
                 do i = 1, sys_size
@@ -1052,6 +1061,15 @@ contains
                             bc_buffers(1, 1)%sf(i, k, l)
                     end do
                 end do
+                ! Apply velocity perturbation to momentum components
+                if (vel_factor /= 1._stp) then
+                    do i = momxb, momxe
+                        do j = 1, buff_size
+                            q_prim_vf(i)%sf(-j, k, l) = &
+                                q_prim_vf(i)%sf(-j, k, l)*vel_factor
+                        end do
+                    end do
+                end if
             else !< bc_x%end
                 do i = 1, sys_size
                     do j = 1, buff_size
@@ -1059,6 +1077,14 @@ contains
                             bc_buffers(1, 2)%sf(i, k, l)
                     end do
                 end do
+                if (vel_factor /= 1._stp) then
+                    do i = momxb, momxe
+                        do j = 1, buff_size
+                            q_prim_vf(i)%sf(m + j, k, l) = &
+                                q_prim_vf(i)%sf(m + j, k, l)*vel_factor
+                        end do
+                    end do
+                end if
             end if
         elseif (bc_dir == 2) then !< y-direction
             #:if not MFC_CASE_OPTIMIZATION or num_dims > 1
@@ -1069,6 +1095,14 @@ contains
                                 bc_buffers(2, 1)%sf(k, i, l)
                         end do
                     end do
+                    if (vel_factor /= 1._stp) then
+                        do i = momxb, momxe
+                            do j = 1, buff_size
+                                q_prim_vf(i)%sf(k, -j, l) = &
+                                    q_prim_vf(i)%sf(k, -j, l)*vel_factor
+                            end do
+                        end do
+                    end if
                 else !< bc_y%end
                     do i = 1, sys_size
                         do j = 1, buff_size
@@ -1076,6 +1110,14 @@ contains
                                 bc_buffers(2, 2)%sf(k, i, l)
                         end do
                     end do
+                    if (vel_factor /= 1._stp) then
+                        do i = momxb, momxe
+                            do j = 1, buff_size
+                                q_prim_vf(i)%sf(k, n + j, l) = &
+                                    q_prim_vf(i)%sf(k, n + j, l)*vel_factor
+                            end do
+                        end do
+                    end if
                 end if
             #:endif
         elseif (bc_dir == 3) then !< z-direction
@@ -1087,6 +1129,14 @@ contains
                                 bc_buffers(3, 1)%sf(k, l, i)
                         end do
                     end do
+                    if (vel_factor /= 1._stp) then
+                        do i = momxb, momxe
+                            do j = 1, buff_size
+                                q_prim_vf(i)%sf(k, l, -j) = &
+                                    q_prim_vf(i)%sf(k, l, -j)*vel_factor
+                            end do
+                        end do
+                    end if
                 else !< bc_z%end
                     do i = 1, sys_size
                         do j = 1, buff_size
@@ -1094,6 +1144,14 @@ contains
                                 bc_buffers(3, 2)%sf(k, l, i)
                         end do
                     end do
+                    if (vel_factor /= 1._stp) then
+                        do i = momxb, momxe
+                            do j = 1, buff_size
+                                q_prim_vf(i)%sf(k, l, p + j) = &
+                                    q_prim_vf(i)%sf(k, l, p + j)*vel_factor
+                            end do
+                        end do
+                    end if
                 end if
             #:endif
         end if

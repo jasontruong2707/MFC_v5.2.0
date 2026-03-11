@@ -474,19 +474,19 @@ contains
                                 ! Map rotated (j,k,l) to physical (x,y,z) indices
                                 #:if NORM_DIR == 1
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_L, j, k, l, Re_visc_per_phase_L)
+                                                           alpha_L, j, k, l, Re_visc_per_phase_L)
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_R, j + 1, k, l, Re_visc_per_phase_R)
+                                                           alpha_R, j + 1, k, l, Re_visc_per_phase_R)
                                 #:elif NORM_DIR == 2
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_L, k, j, l, Re_visc_per_phase_L)
+                                                           alpha_L, k, j, l, Re_visc_per_phase_L)
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_R, k, j + 1, l, Re_visc_per_phase_R)
+                                                           alpha_R, k, j + 1, l, Re_visc_per_phase_R)
                                 #:else
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_L, l, k, j, Re_visc_per_phase_L)
+                                                           alpha_L, l, k, j, Re_visc_per_phase_L)
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_R, l, k, j + 1, Re_visc_per_phase_R)
+                                                           alpha_R, l, k, j + 1, Re_visc_per_phase_R)
                                 #:endif
                                 call s_compute_mixture_re( &
                                     alpha_L, Re_visc_per_phase_L, Re_L)
@@ -1276,19 +1276,19 @@ contains
                                 ! Map rotated (j,k,l) to physical (x,y,z) indices
                                 #:if NORM_DIR == 1
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_L, j, k, l, Re_visc_per_phase_L)
+                                                           alpha_L, j, k, l, Re_visc_per_phase_L)
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_R, j + 1, k, l, Re_visc_per_phase_R)
+                                                           alpha_R, j + 1, k, l, Re_visc_per_phase_R)
                                 #:elif NORM_DIR == 2
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_L, k, j, l, Re_visc_per_phase_L)
+                                                           alpha_L, k, j, l, Re_visc_per_phase_L)
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_R, k, j + 1, l, Re_visc_per_phase_R)
+                                                           alpha_R, k, j + 1, l, Re_visc_per_phase_R)
                                 #:else
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_L, l, k, j, Re_visc_per_phase_L)
+                                                           alpha_L, l, k, j, Re_visc_per_phase_L)
                                     call s_compute_re_visc(q_prim_vf, &
-                                        alpha_R, l, k, j + 1, Re_visc_per_phase_R)
+                                                           alpha_R, l, k, j + 1, Re_visc_per_phase_R)
                                 #:endif
                                 call s_compute_mixture_re( &
                                     alpha_L, Re_visc_per_phase_L, Re_L)
@@ -1762,9 +1762,9 @@ contains
                         end if
 
                         call s_compute_re_visc(q_prim_vf, &
-                            alpha_L, j, k, l, Re_visc_per_phase_L)
+                                               alpha_L, j, k, l, Re_visc_per_phase_L)
                         call s_compute_re_visc(q_prim_vf, &
-                            alpha_R, idx_right_phys(1), idx_right_phys(2), idx_right_phys(3), Re_visc_per_phase_R)
+                                               alpha_R, idx_right_phys(1), idx_right_phys(2), idx_right_phys(3), Re_visc_per_phase_R)
                         call s_compute_mixture_re( &
                             alpha_L, Re_visc_per_phase_L, Re_L)
                         call s_compute_mixture_re( &
@@ -2183,19 +2183,19 @@ contains
                                     ! Map rotated (j,k,l) to physical (x,y,z) indices
                                     #:if NORM_DIR == 1
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_L, j, k, l, Re_visc_per_phase_L)
+                                                               alpha_L, j, k, l, Re_visc_per_phase_L)
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_R, j + 1, k, l, Re_visc_per_phase_R)
+                                                               alpha_R, j + 1, k, l, Re_visc_per_phase_R)
                                     #:elif NORM_DIR == 2
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_L, k, j, l, Re_visc_per_phase_L)
+                                                               alpha_L, k, j, l, Re_visc_per_phase_L)
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_R, k, j + 1, l, Re_visc_per_phase_R)
+                                                               alpha_R, k, j + 1, l, Re_visc_per_phase_R)
                                     #:else
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_L, l, k, j, Re_visc_per_phase_L)
+                                                               alpha_L, l, k, j, Re_visc_per_phase_L)
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_R, l, k, j + 1, Re_visc_per_phase_R)
+                                                               alpha_R, l, k, j + 1, Re_visc_per_phase_R)
                                     #:endif
                                     call s_compute_mixture_re( &
                                         alpha_L, Re_visc_per_phase_L, Re_L)
@@ -2830,19 +2830,19 @@ contains
                                         ! Map rotated (j,k,l) to physical (x,y,z) indices
                                         #:if NORM_DIR == 1
                                             call s_compute_re_visc(q_prim_vf, &
-                                                alpha_L, j, k, l, Re_visc_per_phase_L)
+                                                                   alpha_L, j, k, l, Re_visc_per_phase_L)
                                             call s_compute_re_visc(q_prim_vf, &
-                                                alpha_R, j + 1, k, l, Re_visc_per_phase_R)
+                                                                   alpha_R, j + 1, k, l, Re_visc_per_phase_R)
                                         #:elif NORM_DIR == 2
                                             call s_compute_re_visc(q_prim_vf, &
-                                                alpha_L, k, j, l, Re_visc_per_phase_L)
+                                                                   alpha_L, k, j, l, Re_visc_per_phase_L)
                                             call s_compute_re_visc(q_prim_vf, &
-                                                alpha_R, k, j + 1, l, Re_visc_per_phase_R)
+                                                                   alpha_R, k, j + 1, l, Re_visc_per_phase_R)
                                         #:else
                                             call s_compute_re_visc(q_prim_vf, &
-                                                alpha_L, l, k, j, Re_visc_per_phase_L)
+                                                                   alpha_L, l, k, j, Re_visc_per_phase_L)
                                             call s_compute_re_visc(q_prim_vf, &
-                                                alpha_R, l, k, j + 1, Re_visc_per_phase_R)
+                                                                   alpha_R, l, k, j + 1, Re_visc_per_phase_R)
                                         #:endif
                                         call s_compute_mixture_re( &
                                             alpha_L, Re_visc_per_phase_L, Re_L)
@@ -3269,19 +3269,19 @@ contains
                                     ! Map rotated (j,k,l) to physical (x,y,z) indices
                                     #:if NORM_DIR == 1
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_L, j, k, l, Re_visc_per_phase_L)
+                                                               alpha_L, j, k, l, Re_visc_per_phase_L)
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_R, j + 1, k, l, Re_visc_per_phase_R)
+                                                               alpha_R, j + 1, k, l, Re_visc_per_phase_R)
                                     #:elif NORM_DIR == 2
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_L, k, j, l, Re_visc_per_phase_L)
+                                                               alpha_L, k, j, l, Re_visc_per_phase_L)
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_R, k, j + 1, l, Re_visc_per_phase_R)
+                                                               alpha_R, k, j + 1, l, Re_visc_per_phase_R)
                                     #:else
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_L, l, k, j, Re_visc_per_phase_L)
+                                                               alpha_L, l, k, j, Re_visc_per_phase_L)
                                         call s_compute_re_visc(q_prim_vf, &
-                                            alpha_R, l, k, j + 1, Re_visc_per_phase_R)
+                                                               alpha_R, l, k, j + 1, Re_visc_per_phase_R)
                                     #:endif
                                     call s_compute_mixture_re( &
                                         alpha_L, Re_visc_per_phase_L, Re_L)

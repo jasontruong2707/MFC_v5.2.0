@@ -6,7 +6,15 @@
       "Bash(grep -l \"s_dirichlet\\\\|BC_DIRICHLET\" \"c:\\\\Users\\\\ASUS\\\\MFC\\\\src\\\\simulation\"/*.fpp)",
       "Bash(grep -l \"patch_bc\" \"c:\\\\Users\\\\ASUS\\\\MFC\\\\src\\\\pre_process\"/*.fpp)",
       "Bash(grep -n \"read.*patch_bc\\\\|patch_bc.*read\" \"c:\\\\Users\\\\ASUS\\\\MFC\\\\src\\\\pre_process\"/*.fpp)",
-      "Bash(grep -l \"patch_bc\" \"c:\\\\Users\\\\ASUS\\\\MFC\\\\examples\"/*/*.inp)"
+      "Bash(grep -l \"patch_bc\" \"c:\\\\Users\\\\ASUS\\\\MFC\\\\examples\"/*/*.inp)",
+      "Bash(git -C \"c:/Users/ASUS/MFC_PR\" status)",
+      "Bash(git -C \"c:/Users/ASUS/MFC_PR\" apply --ignore-whitespace -C1 /tmp/pr_patch.patch)",
+      "Bash(git -C \"c:/Users/ASUS/MFC_PR\" apply --ignore-whitespace -C1 /tmp/rs_patch.patch)",
+      "Bash(git -C \"c:/Users/ASUS/MFC_PR\" apply --ignore-whitespace -C1 /tmp/visc_patch.patch)",
+      "Bash(\"c:/Users/ASUS/MFC_PR/src/simulation/m_hb_function.fpp\")",
+      "Bash(\"c:/Users/ASUS/MFC_PR/src/simulation/m_re_visc.fpp\")",
+      "Bash(grep -l \"viscous\" /c/Users/ASUS/MFC/examples/3D*/case.py)",
+      "Bash(git -C /c/Users/ASUS/MFC log --oneline -10)"
     ]
   }
 }

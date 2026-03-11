@@ -2,6 +2,9 @@
 !! @file p_main.f90
 !! @brief Contains program p_main
 
+#:include 'case.fpp'
+#:include 'macros.fpp'
+
 !> @brief  Quasi-conservative, shock- and interface- capturing finite-volume
 !!              scheme for the multicomponent Navier-Stokes equations. The system
 !!              is augmented with the relevant advection equations to capture the
@@ -67,6 +70,8 @@ program p_main
         end if
         finaltime = t_step_stop*dt
     end if
+
+    $:GPU_UPDATE(device='[mytime,bc_perturb_amp,bc_perturb_freq]')
 
     call nvtxEndRange ! INIT
 
