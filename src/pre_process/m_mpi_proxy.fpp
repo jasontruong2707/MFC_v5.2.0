@@ -104,7 +104,7 @@ contains
                 & 'length_x', 'length_y', 'length_z', 'radius', 'epsilon',     &
                 & 'beta', 'smooth_coeff', 'rho', 'p0', 'm0', 'r0', 'v0',       &
                 & 'pres', 'gamma', 'pi_inf', 'hcid', 'cv', 'qv', 'qvp',        &
-                & 'model_threshold', 'cf_val', 'Bx', 'By', 'Bz']
+                & 'model_threshold', 'Bx', 'By', 'Bz']
                 call MPI_BCAST(patch_icpp(i)%${VAR}$, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
             #:endfor
 
@@ -148,7 +148,7 @@ contains
             #:endfor
 
             call MPI_BCAST(fluid_pp(i)%non_newtonian, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
-            #:for VAR in ['tau0', 'K', 'nn', 'mu_max', 'mu_min', 'mu_bulk', 'hb_m']
+            #:for VAR in ['tau0', 'K', 'nn', 'mu_max', 'mu_min', 'mu_bulk']
                 call MPI_BCAST(fluid_pp(i)%${VAR}$, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
             #:endfor
 

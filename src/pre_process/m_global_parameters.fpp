@@ -119,7 +119,6 @@ module m_global_parameters
     type(int_bounds_info) :: B_idx                 !< Indexes of first and last magnetic field eqns.
     type(int_bounds_info) :: stress_idx            !< Indexes of elastic shear stress eqns.
     type(int_bounds_info) :: xi_idx                !< Indexes of first and last reference map eqns.
-    integer :: c_idx                               !< Index of the color function
     type(int_bounds_info) :: species_idx           !< Indexes of first & last concentration eqns.
     integer :: damage_idx                          !< Index of damage state variable (D) for continuum damage model
     integer :: psi_idx                             !< Index of hyperbolic cleaning state variable for MHD
@@ -605,7 +604,6 @@ contains
             fluid_pp(i)%mu_max = dflt_real
             fluid_pp(i)%mu_min = 0._wp
             fluid_pp(i)%mu_bulk = 0._wp
-            fluid_pp(i)%hb_m = 1000._wp
         end do
 
         Bx0 = dflt_real
@@ -887,11 +885,6 @@ contains
                 xi_idx%end = sys_size + num_dims
                 ! adding three more equations for the \xi field and the elastic energy
                 sys_size = xi_idx%end + 1
-            end if
-
-            if (surface_tension) then
-                c_idx = sys_size + 1
-                sys_size = c_idx
             end if
 
             if (cont_damage) then

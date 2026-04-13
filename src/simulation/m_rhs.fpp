@@ -201,19 +201,9 @@ contains
 
         end if
 
-        if (surface_tension) then
-            ! This assumes that the color function advection equation is
-            ! the last equation. If this changes then this logic will
-            ! need updated
-            do l = adv_idx%end + 1, sys_size - 1
-                @:ALLOCATE(q_prim_qp%vf(l)%sf(idwbuff(1)%beg:idwbuff(1)%end, idwbuff(2)%beg:idwbuff(2)%end, idwbuff(3)%beg:idwbuff(3)%end))
-            end do
-        else
-            do l = adv_idx%end + 1, sys_size
-                @:ALLOCATE(q_prim_qp%vf(l)%sf(idwbuff(1)%beg:idwbuff(1)%end, idwbuff(2)%beg:idwbuff(2)%end, idwbuff(3)%beg:idwbuff(3)%end))
-            end do
-
-        end if
+        do l = adv_idx%end + 1, sys_size
+            @:ALLOCATE(q_prim_qp%vf(l)%sf(idwbuff(1)%beg:idwbuff(1)%end, idwbuff(2)%beg:idwbuff(2)%end, idwbuff(3)%beg:idwbuff(3)%end))
+        end do
 
         if (.not. igr) then
             @:ACC_SETUP_VFs(q_cons_qp, q_prim_qp)
@@ -234,13 +224,6 @@ contains
                 $:GPU_ENTER_DATA(copyin='[q_prim_qp%vf(l)%sf]')
                 $:GPU_ENTER_DATA(attach='[q_prim_qp%vf(l)%sf]')
             end do
-        end if
-
-        if (surface_tension) then
-            q_prim_qp%vf(c_idx)%sf => &
-                q_cons_qp%vf(c_idx)%sf
-            $:GPU_ENTER_DATA(copyin='[q_prim_qp%vf(c_idx)%sf]')
-            $:GPU_ENTER_DATA(attach='[q_prim_qp%vf(c_idx)%sf]')
         end if
 
         if (hyper_cleaning) then
@@ -1575,22 +1558,6 @@ contains
 
         if (idir == 1) then ! x-direction
 
-            if (surface_tension) then
-                $:GPU_PARALLEL_LOOP(private='[j,k,l]', collapse=3)
-                do l = 0, p
-                    do k = 0, n
-                        do j = 0, m
-                            rhs_vf(c_idx)%sf(j, k, l) = &
-                                rhs_vf(c_idx)%sf(j, k, l) + 1._wp/dx(j)* &
-                                q_prim_vf(c_idx)%sf(j, k, l)* &
-                                (flux_src_n_in(advxb)%sf(j, k, l) - &
-                                 flux_src_n_in(advxb)%sf(j - 1, k, l))
-                        end do
-                    end do
-                end do
-                $:END_GPU_PARALLEL_LOOP()
-            end if
-
             if ((surface_tension .or. viscous) .or. chem_params%diffusion) then
                 $:GPU_PARALLEL_LOOP(private='[j,k,l]', collapse=3)
                 do l = 0, p
@@ -1629,22 +1596,6 @@ contains
             end if
 
         elseif (idir == 2) then ! y-direction
-
-            if (surface_tension) then
-                $:GPU_PARALLEL_LOOP(private='[j,k,l]', collapse=3)
-                do l = 0, p
-                    do k = 0, n
-                        do j = 0, m
-                            rhs_vf(c_idx)%sf(j, k, l) = &
-                                rhs_vf(c_idx)%sf(j, k, l) + 1._wp/dy(k)* &
-                                q_prim_vf(c_idx)%sf(j, k, l)* &
-                                (flux_src_n_in(advxb)%sf(j, k, l) - &
-                                 flux_src_n_in(advxb)%sf(j, k - 1, l))
-                        end do
-                    end do
-                end do
-                $:END_GPU_PARALLEL_LOOP()
-            end if
 
             if (cyl_coord .and. ((bc_y%beg == -2) .or. (bc_y%beg == -14))) then
                 if (viscous .or. dummy) then
@@ -1791,22 +1742,6 @@ contains
             end if
 
         elseif (idir == 3) then ! z-direction
-
-            if (surface_tension) then
-                $:GPU_PARALLEL_LOOP(private='[j,k,l]', collapse=3)
-                do l = 0, p
-                    do k = 0, n
-                        do j = 0, m
-                            rhs_vf(c_idx)%sf(j, k, l) = &
-                                rhs_vf(c_idx)%sf(j, k, l) + 1._wp/dz(l)* &
-                                q_prim_vf(c_idx)%sf(j, k, l)* &
-                                (flux_src_n_in(advxb)%sf(j, k, l) - &
-                                 flux_src_n_in(advxb)%sf(j, k, l - 1))
-                        end do
-                    end do
-                end do
-                $:END_GPU_PARALLEL_LOOP()
-            end if
 
             if ((surface_tension .or. viscous) .or. chem_params%diffusion) then
                 $:GPU_PARALLEL_LOOP(private='[i,j,k,l]', collapse=3)

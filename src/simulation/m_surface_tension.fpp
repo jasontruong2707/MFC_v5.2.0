@@ -26,8 +26,15 @@ module m_surface_tension
 
     private; public :: s_initialize_surface_tension_module, &
  s_compute_capillary_source_flux, &
+ s_reconstruct_color_function, &
  s_get_capillary, &
  s_finalize_surface_tension_module
+
+    !> @name color function field (derived from volume fractions)
+    !> @{
+    type(scalar_field) :: c_sf
+    !> @}
+    $:GPU_DECLARE(create='[c_sf]')
 
     !> @name color function gradient components and magnitude
     !> @{
@@ -49,6 +56,9 @@ contains
     impure subroutine s_initialize_surface_tension_module
 
         integer :: j
+
+        @:ALLOCATE(c_sf%sf(idwbuff(1)%beg:idwbuff(1)%end, idwbuff(2)%beg:idwbuff(2)%end, idwbuff(3)%beg:idwbuff(3)%end))
+        @:ACC_SETUP_SFs(c_sf)
 
         @:ALLOCATE(c_divs(1:num_dims + 1))
 
@@ -234,6 +244,32 @@ contains
 
     end subroutine s_compute_capillary_source_flux
 
+    !> @brief Reconstruct color function from volume fractions: c = sum((i-1)*alpha_i)
+    !! @param q_prim_vf Primitive variable fields (volume fractions read)
+    subroutine s_reconstruct_color_function(q_prim_vf)
+
+        type(scalar_field), dimension(sys_size), intent(in) :: q_prim_vf
+
+        integer :: j, k, l, i
+
+        $:GPU_PARALLEL_LOOP(private='[i,j,k,l]', collapse=3)
+        do l = idwbuff(3)%beg, idwbuff(3)%end
+            do k = idwbuff(2)%beg, idwbuff(2)%end
+                do j = idwbuff(1)%beg, idwbuff(1)%end
+                    c_sf%sf(j, k, l) = 0._wp
+                    $:GPU_LOOP(parallelism='[seq]')
+                    do i = 1, num_fluids
+                        c_sf%sf(j, k, l) = &
+                            c_sf%sf(j, k, l) + &
+                            real(i - 1, wp)*q_prim_vf(advxb + i - 1)%sf(j, k, l)
+                    end do
+                end do
+            end do
+        end do
+        $:END_GPU_PARALLEL_LOOP()
+
+    end subroutine s_reconstruct_color_function
+
     impure subroutine s_get_capillary(q_prim_vf, bc_type)
 
         type(scalar_field), dimension(sys_size), intent(in) :: q_prim_vf
@@ -241,6 +277,8 @@ contains
 
         type(int_bounds_info) :: isx, isy, isz
         integer :: j, k, l, i
+
+        call s_reconstruct_color_function(q_prim_vf)
 
         isx%beg = -1; isy%beg = 0; isz%beg = 0
 
@@ -254,7 +292,7 @@ contains
             do k = 0, n
                 do j = 0, m
                     c_divs(1)%sf(j, k, l) = 1._wp/(x_cc(j + 1) - x_cc(j - 1))* &
-                                            (q_prim_vf(c_idx)%sf(j + 1, k, l) - q_prim_vf(c_idx)%sf(j - 1, k, l))
+                                            (c_sf%sf(j + 1, k, l) - c_sf%sf(j - 1, k, l))
                 end do
             end do
         end do
@@ -265,7 +303,7 @@ contains
             do k = 0, n
                 do j = 0, m
                     c_divs(2)%sf(j, k, l) = 1._wp/(y_cc(k + 1) - y_cc(k - 1))* &
-                                            (q_prim_vf(c_idx)%sf(j, k + 1, l) - q_prim_vf(c_idx)%sf(j, k - 1, l))
+                                            (c_sf%sf(j, k + 1, l) - c_sf%sf(j, k - 1, l))
                 end do
             end do
         end do
@@ -277,7 +315,7 @@ contains
                 do k = 0, n
                     do j = 0, m
                         c_divs(3)%sf(j, k, l) = 1._wp/(z_cc(l + 1) - z_cc(l - 1))* &
-                                                (q_prim_vf(c_idx)%sf(j, k, l + 1) - q_prim_vf(c_idx)%sf(j, k, l - 1))
+                                                (c_sf%sf(j, k, l + 1) - c_sf%sf(j, k, l - 1))
                     end do
                 end do
             end do
@@ -397,6 +435,8 @@ contains
 
     impure subroutine s_finalize_surface_tension_module
         integer :: j
+
+        @:DEALLOCATE(c_sf%sf)
 
         do j = 1, num_dims
             @:DEALLOCATE(c_divs(j)%sf)

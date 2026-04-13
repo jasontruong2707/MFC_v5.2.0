@@ -271,7 +271,6 @@ PATTERNS = [
     (r"patch_icpp\((\d+)\)%epsilon", "Interface thickness for patch {0}"),
     (r"patch_icpp\((\d+)\)%beta", "Shape parameter beta for patch {0}"),
     (r"patch_icpp\((\d+)\)%a\((\d+)\)", "Shape coefficient a({1}) for patch {0}"),
-    (r"patch_icpp\((\d+)\)%cf_val", "Color function value for patch {0}"),
     (r"patch_icpp\((\d+)\)%cv", "Specific heat at constant volume for patch {0}"),
     (r"patch_icpp\((\d+)\)%qv", "Heat of formation for patch {0}"),
     (r"patch_icpp\((\d+)\)%qvp", "Heat of formation prime for patch {0}"),

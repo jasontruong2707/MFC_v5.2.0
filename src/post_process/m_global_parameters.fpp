@@ -141,7 +141,6 @@ module m_global_parameters
     type(int_bounds_info) :: B_idx                 !< Indexes of first and last magnetic field eqns.
     type(int_bounds_info) :: stress_idx            !< Indices of elastic stresses
     type(int_bounds_info) :: xi_idx                !< Indexes of first and last reference map eqns.
-    integer :: c_idx                               !< Index of color function
     type(int_bounds_info) :: species_idx           !< Indexes of first & last concentration eqns.
     integer :: damage_idx                          !< Index of damage state variable (D) for continuum damage model
     integer :: psi_idx                                 !< Index of hyperbolic cleaning state variable for MHD
@@ -261,6 +260,7 @@ module m_global_parameters
     logical :: qm_wrt
     logical :: liutex_wrt
     logical :: schlieren_wrt
+    logical :: mu_eff_wrt
     logical :: cf_wrt
     logical :: ib
     logical :: chem_wrt_Y(1:num_species)
@@ -436,6 +436,7 @@ contains
             fluid_pp(i)%qv = 0._wp
             fluid_pp(i)%qvp = 0._wp
             fluid_pp(i)%G = dflt_real
+            fluid_pp(i)%Re = dflt_real
             fluid_pp(i)%non_newtonian = .false.
             fluid_pp(i)%tau0 = 0._wp
             fluid_pp(i)%K = 0._wp
@@ -443,7 +444,6 @@ contains
             fluid_pp(i)%mu_max = dflt_real
             fluid_pp(i)%mu_min = 0._wp
             fluid_pp(i)%mu_bulk = 0._wp
-            fluid_pp(i)%hb_m = 1000._wp
         end do
 
         ! Subgrid bubble parameters
@@ -501,6 +501,7 @@ contains
         qm_wrt = .false.
         liutex_wrt = .false.
         schlieren_wrt = .false.
+        mu_eff_wrt = .false.
         sim_data = .false.
         cf_wrt = .false.
         ib = .false.
@@ -809,11 +810,6 @@ contains
                 ! number of entries in the symmetric btensor plus the jacobian
                 b_size = (num_dims*(num_dims + 1))/2 + 1
                 tensor_size = num_dims**2 + 1
-            end if
-
-            if (surface_tension) then
-                c_idx = sys_size + 1
-                sys_size = c_idx
             end if
 
             if (cont_damage) then

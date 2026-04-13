@@ -120,8 +120,7 @@ def list_cases() -> typing.List[TestCaseBuilder]:
             stack.pop()
 
     def alter_capillary():
-        stack.push('', {'patch_icpp(1)%cf_val':1, 'patch_icpp(2)%cf_val':0, 'patch_icpp(3)%cf_val':1,
-                        'sigma':1, 'model_eqns':3, 'surface_tension': 'T'})
+        stack.push('', {'sigma':1, 'model_eqns':3, 'surface_tension': 'T'})
         cases.append(define_case_d(stack, [f"capillary=T","model_eqns=3"],{}))
         stack.pop()
 

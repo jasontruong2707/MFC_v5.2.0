@@ -876,10 +876,6 @@ contains
                         end do
                     end if
 
-                    if (surface_tension) then
-                        qK_prim_vf(c_idx)%sf(j, k, l) = qK_cons_vf(c_idx)%sf(j, k, l)
-                    end if
-
                     if (cont_damage) qK_prim_vf(damage_idx)%sf(j, k, l) = qK_cons_vf(damage_idx)%sf(j, k, l)
 
                     if (hyper_cleaning) qK_prim_vf(psi_idx)%sf(j, k, l) = qK_cons_vf(psi_idx)%sf(j, k, l)
@@ -1145,10 +1141,6 @@ contains
                         do i = xibeg, xiend
                             q_cons_vf(i)%sf(j, k, l) = rho*q_prim_vf(i)%sf(j, k, l)
                         end do
-                    end if
-
-                    if (surface_tension) then
-                        q_cons_vf(c_idx)%sf(j, k, l) = q_prim_vf(c_idx)%sf(j, k, l)
                     end if
 
                     if (cont_damage) q_cons_vf(damage_idx)%sf(j, k, l) = q_prim_vf(damage_idx)%sf(j, k, l)

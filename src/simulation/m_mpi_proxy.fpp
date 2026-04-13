@@ -194,7 +194,7 @@ contains
             #:endfor
             call MPI_BCAST(fluid_pp(i)%Re(1), 2, mpi_p, 0, MPI_COMM_WORLD, ierr)
             call MPI_BCAST(fluid_pp(i)%non_newtonian, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
-            #:for VAR in ['tau0', 'K', 'nn', 'mu_max', 'mu_min', 'mu_bulk', 'hb_m']
+            #:for VAR in ['tau0', 'K', 'nn', 'mu_max', 'mu_min', 'mu_bulk']
                 call MPI_BCAST(fluid_pp(i)%${VAR}$, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
             #:endfor
         end do

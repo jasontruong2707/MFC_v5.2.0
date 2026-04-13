@@ -2424,8 +2424,8 @@ contains
                                 $:GPU_LOOP(parallelism='[seq]')
                                 do i = 1, num_dims
                                     vel_src_rs${XYZ}$_vf(j, k, l, dir_idx(i)) = &
-                                        xi_M*(vel_L(dir_idx(i)) + dir_flg(dir_idx(i))*(s_S*(xi_MP*(xi_L - 1) + 1) - vel_L(dir_idx(i)))) + &
-                                        xi_P*(vel_R(dir_idx(i)) + dir_flg(dir_idx(i))*(s_S*(xi_PP*(xi_R - 1) + 1) - vel_R(dir_idx(i))))
+                                        xi_M*(vel_L(dir_idx(i)) + dir_flg(dir_idx(i))*(s_S - vel_L(dir_idx(i)))) + &
+                                        xi_P*(vel_R(dir_idx(i)) + dir_flg(dir_idx(i))*(s_S - vel_R(dir_idx(i))))
                                 end do
 
                                 ! INTERNAL ENERGIES ADVECTION FLUX.
@@ -2467,13 +2467,6 @@ contains
                                             xi_P*(s_S/(s_R - s_S))*(s_R*rho_R*xi_field_R(i) &
                                                                     - rho_R*vel_R(dir_idx(1))*xi_field_R(i))
                                     end do
-                                end if
-
-                                ! COLOR FUNCTION FLUX
-                                if (surface_tension) then
-                                    flux_rs${XYZ}$_vf(j, k, l, c_idx) = &
-                                        (xi_M*qL_prim_rs${XYZ}$_vf(j, k, l, c_idx) + &
-                                         xi_P*qR_prim_rs${XYZ}$_vf(j + 1, k, l, c_idx))*s_S
                                 end if
 
                                 ! Geometrical source flux for cylindrical coordinates
@@ -3594,15 +3587,6 @@ contains
                                                 dir_flg(dir_idx(i))* &
                                                 s_P*(xi_R - 1._wp))
                                 end do
-
-                                ! COLOR FUNCTION FLUX
-                                if (surface_tension) then
-                                    flux_rs${XYZ}$_vf(j, k, l, c_idx) = &
-                                        xi_M*qL_prim_rs${XYZ}$_vf(j, k, l, c_idx) &
-                                        *(vel_L(dir_idx(1)) + s_M*(xi_L - 1._wp)) &
-                                        + xi_P*qR_prim_rs${XYZ}$_vf(j + 1, k, l, c_idx) &
-                                        *(vel_R(dir_idx(1)) + s_P*(xi_R - 1._wp))
-                                end if
 
                                 ! REFERENCE MAP FLUX.
                                 if (hyperelasticity) then

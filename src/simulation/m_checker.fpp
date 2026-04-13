@@ -119,8 +119,6 @@ contains
                 @:PROHIBIT(fluid_pp(i)%mu_max < dflt_real .and. &
                     fluid_pp(i)%mu_max <= fluid_pp(i)%mu_min, &
                     "Non-Newtonian fluid mu_max must be > mu_min when set")
-                @:PROHIBIT(fluid_pp(i)%hb_m <= 0._wp, &
-                    "Non-Newtonian Papanastasiou parameter hb_m must be > 0")
             end if
         end do
 

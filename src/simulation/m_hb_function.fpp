@@ -5,8 +5,8 @@
 #:include 'macros.fpp'
 
 !> @brief The module contains functions to compute Herschel-Bulkley
-!!        non-Newtonian viscosity with Papanastasiou regularization.
-!!        mu = (tau0/gdot)*(1 - exp(-m*gdot)) + K*gdot^(nn-1)
+!!        non-Newtonian viscosity with mu_max cap (pure HB, no Papanastasiou).
+!!        mu = tau0/gdot + K*gdot^(nn-1), capped at [mu_min, mu_max]
 module m_hb_function
 
     use m_derived_types        !< Definitions of the derived types
@@ -20,27 +20,27 @@ module m_hb_function
 
 contains
 
-    !> Computes Herschel-Bulkley viscosity with Papanastasiou regularization
+    !> Computes Herschel-Bulkley viscosity (pure HB, no Papanastasiou regularization)
+    !! mu = tau0/gdot + K*gdot^(nn-1), capped at [mu_min, mu_max]
+    !! shear_rate is clamped to gdot_min upstream to avoid division by zero.
     !! @param tau0 Yield stress
     !! @param K_val Consistency index
     !! @param nn_val Flow behavior index
     !! @param mu_min_val Minimum viscosity limit
     !! @param mu_max_val Maximum viscosity limit
-    !! @param shear_rate Shear rate magnitude
-    !! @param hb_m_val Papanastasiou regularization parameter
+    !! @param shear_rate Shear rate magnitude (clamped to gdot_min upstream)
     !! @return Viscosity
     pure function f_compute_hb_viscosity(tau0, K_val, nn_val, &
-                                         mu_min_val, mu_max_val, shear_rate, hb_m_val) result(mu)
+                                         mu_min_val, mu_max_val, shear_rate) result(mu)
         $:GPU_ROUTINE(parallelism='[seq]')
 
         real(wp), intent(in) :: tau0, K_val, nn_val
         real(wp), intent(in) :: mu_min_val, mu_max_val
-        real(wp), intent(in) :: shear_rate, hb_m_val
+        real(wp), intent(in) :: shear_rate
         real(wp) :: mu
-        real(wp) :: yield_term, power_law_term, exp_term
+        real(wp) :: yield_term, power_law_term
 
-        exp_term = exp(-hb_m_val*shear_rate)
-        yield_term = tau0*(1._wp - exp_term)/shear_rate
+        yield_term = tau0/shear_rate
         power_law_term = K_val*(shear_rate**(nn_val - 1._wp))
 
         mu = yield_term + power_law_term
@@ -68,9 +68,6 @@ contains
         ! 2*D_ij*D_ij = 2*(D_xx^2+D_yy^2+D_zz^2+2*(D_xy^2+D_xz^2+D_yz^2))
         shear_rate = sqrt(2._wp*(D_xx*D_xx + D_yy*D_yy + D_zz*D_zz + &
                                  2._wp*(D_xy*D_xy + D_xz*D_xz + D_yz*D_yz)))
-
-        ! Clamp for numerical safety
-        shear_rate = min(max(shear_rate, 1.0e-2_wp), 1.0e5_wp)
 
     end function f_compute_shear_rate_from_components
 

@@ -290,13 +290,12 @@ module m_global_parameters
     integer :: b_size                                  !< Number of elements in the symmetric b tensor, plus one
     integer :: tensor_size                             !< Number of elements in the full tensor plus one
     type(int_bounds_info) :: species_idx               !< Indexes of first & last concentration eqns.
-    integer :: c_idx                                   !< Index of color function
     integer :: damage_idx                              !< Index of damage state variable (D) for continuum damage model
     integer :: psi_idx                                 !< Index of hyperbolic cleaning state variable for MHD
     !> @}
     $:GPU_DECLARE(create='[sys_size,E_idx,n_idx,bub_idx,alf_idx,gamma_idx]')
     $:GPU_DECLARE(create='[pi_inf_idx,B_idx,stress_idx,xi_idx,b_size]')
-    $:GPU_DECLARE(create='[tensor_size,species_idx,c_idx]')
+    $:GPU_DECLARE(create='[tensor_size,species_idx]')
 
     ! Cell Indices for the (local) interior points (O-m, O-n, 0-p).
     ! Stands for "InDices With INTerior".
@@ -704,7 +703,6 @@ contains
             fluid_pp(i)%mu_max = dflt_real
             fluid_pp(i)%mu_min = 0._wp
             fluid_pp(i)%mu_bulk = 0._wp
-            fluid_pp(i)%hb_m = 1000._wp
         end do
 
         ! Subgrid bubble parameters
@@ -1178,11 +1176,6 @@ contains
                 sys_size = xi_idx%end + 1
             end if
 
-            if (surface_tension) then
-                c_idx = sys_size + 1
-                sys_size = c_idx
-            end if
-
             if (cont_damage) then
                 damage_idx = sys_size + 1
                 sys_size = damage_idx
@@ -1305,7 +1298,7 @@ contains
         $:GPU_UPDATE(device='[momxb,momxe,advxb,advxe,contxb,contxe, &
             & bubxb,bubxe,intxb,intxe,sys_size,buff_size,E_idx, &
             & alf_idx,n_idx,adv_n,adap_dt,pi_fac,strxb,strxe, &
-            & chemxb,chemxe,c_idx,adap_dt_tol,adap_dt_max_iters]')
+            & chemxb,chemxe,adap_dt_tol,adap_dt_max_iters]')
         $:GPU_UPDATE(device='[b_size,xibeg,xiend,tensor_size]')
 
         $:GPU_UPDATE(device='[species_idx]')

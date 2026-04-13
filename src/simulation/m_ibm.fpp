@@ -180,7 +180,6 @@ contains
 
         real(wp) :: pres_IP
         real(wp), dimension(3) :: vel_IP, vel_norm_IP
-        real(wp) :: c_IP
         #:if not MFC_CASE_OPTIMIZATION and USING_AMD
             real(wp), dimension(3) :: Gs
             real(wp), dimension(3) :: alpha_rho_IP, alpha_IP
@@ -235,7 +234,7 @@ contains
         $:END_GPU_PARALLEL_LOOP()
 
         if (num_gps > 0) then
-            $:GPU_PARALLEL_LOOP(private='[i,physical_loc,dyn_pres,alpha_rho_IP, alpha_IP,pres_IP,vel_IP,vel_g,vel_norm_IP,r_IP, v_IP,pb_IP,mv_IP,nmom_IP,presb_IP,massv_IP,rho, gamma,pi_inf,Re_K,G_K,Gs,gp,innerp,norm,buf, radial_vector, rotation_velocity, j,k,l,q,qv_K,c_IP,nbub,patch_id]')
+            $:GPU_PARALLEL_LOOP(private='[i,physical_loc,dyn_pres,alpha_rho_IP, alpha_IP,pres_IP,vel_IP,vel_g,vel_norm_IP,r_IP, v_IP,pb_IP,mv_IP,nmom_IP,presb_IP,massv_IP,rho, gamma,pi_inf,Re_K,G_K,Gs,gp,innerp,norm,buf, radial_vector, rotation_velocity, j,k,l,q,qv_K,nbub,patch_id]')
             do i = 1, num_gps
 
                 gp = ghost_points(i)
@@ -254,19 +253,19 @@ contains
                 !Interpolate primitive variables at image point associated w/ GP
                 if (bubbles_euler .and. .not. qbmm) then
                     call s_interpolate_image_point(q_prim_vf, gp, &
-                                                   alpha_rho_IP, alpha_IP, pres_IP, vel_IP, c_IP, &
+                                                   alpha_rho_IP, alpha_IP, pres_IP, vel_IP, &
                                                    r_IP, v_IP, pb_IP, mv_IP)
                 else if (qbmm .and. polytropic) then
                     call s_interpolate_image_point(q_prim_vf, gp, &
-                                                   alpha_rho_IP, alpha_IP, pres_IP, vel_IP, c_IP, &
+                                                   alpha_rho_IP, alpha_IP, pres_IP, vel_IP, &
                                                    r_IP, v_IP, pb_IP, mv_IP, nmom_IP)
                 else if (qbmm .and. .not. polytropic) then
                     call s_interpolate_image_point(q_prim_vf, gp, &
-                                                   alpha_rho_IP, alpha_IP, pres_IP, vel_IP, c_IP, &
+                                                   alpha_rho_IP, alpha_IP, pres_IP, vel_IP, &
                                                    r_IP, v_IP, pb_IP, mv_IP, nmom_IP, pb_in, mv_in, presb_IP, massv_IP)
                 else
                     call s_interpolate_image_point(q_prim_vf, gp, &
-                                                   alpha_rho_IP, alpha_IP, pres_IP, vel_IP, c_IP)
+                                                   alpha_rho_IP, alpha_IP, pres_IP, vel_IP)
                 end if
 
                 dyn_pres = 0._wp
@@ -277,10 +276,6 @@ contains
                     q_prim_vf(q)%sf(j, k, l) = alpha_rho_IP(q)
                     q_prim_vf(advxb + q - 1)%sf(j, k, l) = alpha_IP(q)
                 end do
-
-                if (surface_tension) then
-                    q_prim_vf(c_idx)%sf(j, k, l) = c_IP
-                end if
 
                 ! set the pressure
                 if (patch_ib(patch_id)%moving_ibm <= 1) then
@@ -353,11 +348,6 @@ contains
                     q_cons_vf(q)%sf(j, k, l) = alpha_rho_IP(q)
                     q_cons_vf(advxb + q - 1)%sf(j, k, l) = alpha_IP(q)
                 end do
-
-                ! Set color function
-                if (surface_tension) then
-                    q_cons_vf(c_idx)%sf(j, k, l) = c_IP
-                end if
 
                 ! Set Energy
                 if (bubbles_euler) then
@@ -850,8 +840,13 @@ contains
 
     !> Function that uses the interpolation coefficients and the current state
     !! at the cell centers in order to estimate the state at the image point
+    !! @param gp Ghost point data structure
+    !! @param alpha_rho_IP Partial density at image point
+    !! @param alpha_IP Volume fraction at image point
+    !! @param pres_IP Pressure at image point
+    !! @param vel_IP Velocity at image point
     subroutine s_interpolate_image_point(q_prim_vf, gp, alpha_rho_IP, alpha_IP, &
-                                         pres_IP, vel_IP, c_IP, r_IP, v_IP, pb_IP, &
+                                         pres_IP, vel_IP, r_IP, v_IP, pb_IP, &
                                          mv_IP, nmom_IP, pb_in, mv_in, presb_IP, massv_IP)
         $:GPU_ROUTINE(parallelism='[seq]')
         type(scalar_field), &
@@ -863,7 +858,6 @@ contains
         type(ghost_point), intent(IN) :: gp
         real(wp), intent(INOUT) :: pres_IP
         real(wp), dimension(3), intent(INOUT) :: vel_IP
-        real(wp), intent(INOUT) :: c_IP
         #:if not MFC_CASE_OPTIMIZATION and USING_AMD
             real(wp), dimension(3), intent(INOUT) :: alpha_IP, alpha_rho_IP
         #:else
@@ -890,8 +884,6 @@ contains
         alpha_IP = 0._wp
         pres_IP = 0._wp
         vel_IP = 0._wp
-
-        if (surface_tension) c_IP = 0._wp
 
         if (bubbles_euler) then
             r_IP = 0._wp
@@ -935,10 +927,6 @@ contains
                         alpha_IP(l) = alpha_IP(l) + coeff* &
                                       q_prim_vf(advxb + l - 1)%sf(i, j, k)
                     end do
-
-                    if (surface_tension) then
-                        c_IP = c_IP + coeff*q_prim_vf(c_idx)%sf(i, j, k)
-                    end if
 
                     if (bubbles_euler .and. .not. qbmm) then
                         $:GPU_LOOP(parallelism='[seq]')

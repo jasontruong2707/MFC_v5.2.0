@@ -693,11 +693,6 @@ contains
             end do
         end if
 
-        if (surface_tension) then
-            q_prim_vf(c_idx)%sf(j, k, l) = eta*patch_icpp(patch_id)%cf_val + &
-                                           (1._wp - eta)*orig_prim_vf(c_idx)
-        end if
-
         ! Updating the patch identities bookkeeping variable
         if (1._wp - eta < 1.e-16_wp) patch_id_fp(j, k, l) = patch_id
 

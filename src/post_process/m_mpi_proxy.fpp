@@ -101,7 +101,8 @@ contains
             & 'heat_ratio_wrt', 'pi_inf_wrt', 'pres_inf_wrt', 'cons_vars_wrt', &
             & 'prim_vars_wrt', 'c_wrt', 'qm_wrt','schlieren_wrt','chem_wrt_T', &
             & 'bubbles_euler', 'qbmm', 'polytropic', 'polydisperse',           &
-            & 'file_per_process', 'relax', 'cf_wrt', 'igr', 'liutex_wrt',      &
+            & 'file_per_process', 'relax', 'cf_wrt', 'igr', 'liutex_wrt',     &
+            & 'mu_eff_wrt',                                                    &
             & 'adv_n', 'ib', 'cfl_adap_dt', 'cfl_const_dt', 'cfl_dt',          &
             & 'surface_tension', 'hyperelasticity', 'bubbles_lagrange',        &
             & 'output_partial_domain', 'relativity', 'cont_damage', 'bc_io',   &
@@ -134,8 +135,9 @@ contains
             call MPI_BCAST(fluid_pp(i)%qv, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
             call MPI_BCAST(fluid_pp(i)%qvp, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
             call MPI_BCAST(fluid_pp(i)%G, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
+            call MPI_BCAST(fluid_pp(i)%Re(1), 2, mpi_p, 0, MPI_COMM_WORLD, ierr)
             call MPI_BCAST(fluid_pp(i)%non_newtonian, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
-            #:for VAR in ['tau0', 'K', 'nn', 'mu_max', 'mu_min', 'mu_bulk', 'hb_m']
+            #:for VAR in ['tau0', 'K', 'nn', 'mu_max', 'mu_min', 'mu_bulk']
                 call MPI_BCAST(fluid_pp(i)%${VAR}$, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
             #:endfor
         end do

@@ -103,7 +103,7 @@ contains
             E_wrt, fft_wrt, pres_wrt, alpha_wrt, gamma_wrt, &
             heat_ratio_wrt, pi_inf_wrt, pres_inf_wrt, &
             cons_vars_wrt, prim_vars_wrt, c_wrt, &
-            omega_wrt, qm_wrt, liutex_wrt, schlieren_wrt, schlieren_alpha, &
+            omega_wrt, qm_wrt, liutex_wrt, schlieren_wrt, mu_eff_wrt, schlieren_alpha, &
             fd_order, mixture_err, alt_soundspeed, &
             flux_lim, flux_wrt, cyl_coord, &
             parallel_io, rhoref, pref, bubbles_euler, qbmm, sigR, &
@@ -805,9 +805,26 @@ contains
 
         end if
 
+        ! Adding effective viscosity to formatted database file
+        if (mu_eff_wrt) then
+
+            call s_derive_effective_viscosity(q_prim_vf, q_sf)
+
+            write (varname, '(A)') 'mu_eff'
+            call s_write_variable_to_formatted_database_file(varname, t_step)
+
+            varname(:) = ' '
+
+        end if
+
         ! Adding the color function to formatted database file
+        ! Reconstruct c = sum((i-1)*alpha_i) from volume fractions
         if (cf_wrt) then
-            q_sf(:, :, :) = q_cons_vf(c_idx)%sf(x_beg:x_end, y_beg:y_end, z_beg:z_end)
+            q_sf(:, :, :) = 0._wp
+            do i = 1, num_fluids
+                q_sf(:, :, :) = q_sf(:, :, :) + &
+                                real(i - 1, wp)*q_cons_vf(advxb + i - 1)%sf(x_beg:x_end, y_beg:y_end, z_beg:z_end)
+            end do
             write (varname, '(A,I0)') 'color_function'
             call s_write_variable_to_formatted_database_file(varname, t_step)
             varname(:) = ' '

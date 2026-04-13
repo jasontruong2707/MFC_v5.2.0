@@ -339,13 +339,6 @@ contains
                 end do
             end if
 
-            if (surface_tension) then
-                @:ALLOCATE(q_prim_vf(c_idx)%sf(idwbuff(1)%beg:idwbuff(1)%end, &
-                    idwbuff(2)%beg:idwbuff(2)%end, &
-                    idwbuff(3)%beg:idwbuff(3)%end))
-                @:ACC_SETUP_SFs(q_prim_vf(c_idx))
-            end if
-
             if (chemistry) then
                 do i = chemxb, chemxe
                     @:ALLOCATE(q_prim_vf(i)%sf(idwbuff(1)%beg:idwbuff(1)%end, &

@@ -15,7 +15,7 @@ def _suggest_similar_params(unknown_key: str, valid_keys: list, n: int = 3) -> l
 QPVF_IDX_VARS = {
     'alpha_rho': 'contxb', 'vel'  : 'momxb',         'pres': 'E_idx', 
     'alpha':     'advxb',  'tau_e': 'stress_idx%beg', 'Y':   'chemxb',
-    'cf_val': 'c_idx', 'Bx': 'B_idx%beg', 'By': 'B_idx%end-1', 'Bz': 'B_idx%end',
+    'Bx': 'B_idx%beg', 'By': 'B_idx%end-1', 'Bz': 'B_idx%end',
 }
 
 MIBM_ANALYTIC_VARS = [

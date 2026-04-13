@@ -28,6 +28,7 @@ module m_derived_variables
  s_derive_sound_speed, &
  s_derive_flux_limiter, &
  s_derive_vorticity_component, &
+ s_derive_effective_viscosity, &
  s_derive_qm, &
  s_derive_liutex, &
  s_derive_numerical_schlieren_function, &
@@ -81,13 +82,15 @@ contains
         ! s_compute_finite_difference_coefficients.
 
         ! Allocating centered finite-difference coefficients in x-direction
-        if (omega_wrt(2) .or. omega_wrt(3) .or. schlieren_wrt .or. liutex_wrt) then
+        if (omega_wrt(2) .or. omega_wrt(3) .or. schlieren_wrt .or. liutex_wrt &
+            .or. mu_eff_wrt) then
             allocate (fd_coeff_x(-fd_number:fd_number, &
                                  -offset_x%beg:m + offset_x%end))
         end if
 
         ! Allocating centered finite-difference coefficients in y-direction
         if (omega_wrt(1) .or. omega_wrt(3) .or. liutex_wrt &
+            .or. mu_eff_wrt &
             .or. &
             (n > 0 .and. schlieren_wrt)) then
             allocate (fd_coeff_y(-fd_number:fd_number, &
@@ -96,6 +99,7 @@ contains
 
         ! Allocating centered finite-difference coefficients in z-direction
         if (omega_wrt(1) .or. omega_wrt(2) .or. liutex_wrt &
+            .or. (p > 0 .and. mu_eff_wrt) &
             .or. &
             (p > 0 .and. schlieren_wrt)) then
             allocate (fd_coeff_z(-fd_number:fd_number, &
@@ -816,6 +820,105 @@ contains
         q_sf = exp(q_sf)
 
     end subroutine s_derive_numerical_schlieren_function
+
+    !>  This subroutine computes the effective viscosity field for
+        !!      non-Newtonian fluids using the Herschel-Bulkley model.
+        !!      The result is a mixture-averaged effective viscosity
+        !!      weighted by volume fractions.
+        !!  @param q_prim_vf Primitive variables
+        !!  @param q_sf Effective viscosity output
+    subroutine s_derive_effective_viscosity(q_prim_vf, q_sf)
+
+        type(scalar_field), &
+            dimension(sys_size), &
+            intent(in) :: q_prim_vf
+
+        real(wp), &
+            dimension(-offset_x%beg:m + offset_x%end, &
+                      -offset_y%beg:n + offset_y%end, &
+                      -offset_z%beg:p + offset_z%end), &
+            intent(inout) :: q_sf
+
+        integer :: j, k, l, r, q
+        real(wp) :: D_xx, D_yy, D_zz, D_xy, D_xz, D_yz
+        real(wp) :: du_dx, du_dy, du_dz, dv_dx, dv_dy, dv_dz, dw_dx, dw_dy, dw_dz
+        real(wp) :: shear_rate, mu, yield_term, power_law_term
+        real(wp) :: alpha_q, mu_mix
+
+        do l = -offset_z%beg, p + offset_z%end
+            do k = -offset_y%beg, n + offset_y%end
+                do j = -offset_x%beg, m + offset_x%end
+
+                    ! Compute velocity gradients using FD coefficients
+                    du_dx = 0._wp; du_dy = 0._wp; du_dz = 0._wp
+                    dv_dx = 0._wp; dv_dy = 0._wp; dv_dz = 0._wp
+                    dw_dx = 0._wp; dw_dy = 0._wp; dw_dz = 0._wp
+
+                    do r = -fd_number, fd_number
+                        du_dx = du_dx + fd_coeff_x(r, j)* &
+                                q_prim_vf(mom_idx%beg)%sf(r + j, k, l)
+                        dv_dx = dv_dx + fd_coeff_x(r, j)* &
+                                q_prim_vf(mom_idx%beg + 1)%sf(r + j, k, l)
+
+                        if (n > 0) then
+                            du_dy = du_dy + fd_coeff_y(r, k)* &
+                                    q_prim_vf(mom_idx%beg)%sf(j, r + k, l)
+                            dv_dy = dv_dy + fd_coeff_y(r, k)* &
+                                    q_prim_vf(mom_idx%beg + 1)%sf(j, r + k, l)
+                        end if
+
+                        if (p > 0) then
+                            du_dz = du_dz + fd_coeff_z(r, l)* &
+                                    q_prim_vf(mom_idx%beg)%sf(j, k, r + l)
+                            dv_dz = dv_dz + fd_coeff_z(r, l)* &
+                                    q_prim_vf(mom_idx%beg + 1)%sf(j, k, r + l)
+                            dw_dx = dw_dx + fd_coeff_x(r, j)* &
+                                    q_prim_vf(mom_idx%end)%sf(r + j, k, l)
+                            dw_dy = dw_dy + fd_coeff_y(r, k)* &
+                                    q_prim_vf(mom_idx%end)%sf(j, r + k, l)
+                            dw_dz = dw_dz + fd_coeff_z(r, l)* &
+                                    q_prim_vf(mom_idx%end)%sf(j, k, r + l)
+                        end if
+                    end do
+
+                    ! Strain rate tensor components
+                    D_xx = du_dx
+                    D_yy = dv_dy
+                    D_zz = dw_dz
+                    D_xy = 0.5_wp*(du_dy + dv_dx)
+                    D_xz = 0.5_wp*(du_dz + dw_dx)
+                    D_yz = 0.5_wp*(dv_dz + dw_dy)
+
+                    ! Shear rate magnitude: gdot = sqrt(2*D_ij*D_ij)
+                    shear_rate = sqrt(2._wp*(D_xx*D_xx + D_yy*D_yy + D_zz*D_zz + &
+                                             2._wp*(D_xy*D_xy + D_xz*D_xz + D_yz*D_yz)))
+                    shear_rate = max(shear_rate, 1.e-12_wp)
+
+                    ! Mixture-averaged effective viscosity
+                    mu_mix = 0._wp
+                    do q = 1, num_fluids
+                        alpha_q = q_prim_vf(advxb + q - 1)%sf(j, k, l)
+                        if (fluid_pp(q)%non_newtonian) then
+                            ! HB viscosity: mu = tau0/gdot + K*gdot^(nn-1)
+                            yield_term = fluid_pp(q)%tau0/shear_rate
+                            power_law_term = fluid_pp(q)%K* &
+                                             (shear_rate**(fluid_pp(q)%nn - 1._wp))
+                            mu = yield_term + power_law_term
+                            mu = min(max(mu, fluid_pp(q)%mu_min), fluid_pp(q)%mu_max)
+                        else
+                            ! Newtonian: mu = 1/Re(1)
+                            mu = 1._wp/fluid_pp(q)%Re(1)
+                        end if
+                        mu_mix = mu_mix + alpha_q*mu
+                    end do
+
+                    q_sf(j, k, l) = mu_mix
+
+                end do
+            end do
+        end do
+
+    end subroutine s_derive_effective_viscosity
 
     !>  Deallocation procedures for the module
     impure subroutine s_finalize_derived_variables_module

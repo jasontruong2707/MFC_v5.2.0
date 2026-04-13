@@ -11,7 +11,7 @@ from .schema import ParamDef, ParamType
 from .registry import REGISTRY
 
 # Index limits
-NP, NF, NI, NA, NPR, NB = 10, 10, 10, 4, 10, 10  # patches, fluids, ibs, acoustic, probes, bc_patches
+NP, NF, NI, NA, NPR, NB = 20, 10, 10, 4, 10, 10  # patches, fluids, ibs, acoustic, probes, bc_patches
 
 
 # =============================================================================
@@ -126,7 +126,6 @@ _ATTR_DESCS = {
     # Elasticity
     "tau_e": "Elastic stress component",
     # Misc
-    "cf_val": "Color function value",
     "hcid": "Hard-coded ID",
     "epsilon": "Interface thickness",
     "beta": "Shape parameter beta",
@@ -265,6 +264,7 @@ _SIMPLE_DESCS = {
     "omega_wrt": "Write vorticity",
     "qm_wrt": "Write Q-criterion",
     "liutex_wrt": "Write Liutex vortex field",
+    "mu_eff_wrt": "Write effective viscosity for non-Newtonian fluids",
     "gamma_wrt": "Write gamma field",
     "heat_ratio_wrt": "Write heat capacity ratio",
     "pi_inf_wrt": "Write pi_inf field",
@@ -463,7 +463,7 @@ CONSTRAINTS = {
 
     # Counts (must be positive)
     "num_fluids": {"min": 1, "max": 10},
-    "num_patches": {"min": 0, "max": 10},
+    "num_patches": {"min": 0, "max": 20},
     "num_ibs": {"min": 0, "max": 10},
     "m": {"min": 0},
     "n": {"min": 0},
@@ -628,7 +628,7 @@ def _load():  # pylint: disable=too-many-locals,too-many-statements
     for n in ["schlieren_wrt", "alpha_rho_wrt", "rho_wrt", "mom_wrt", "vel_wrt",
               "flux_wrt", "E_wrt", "pres_wrt", "alpha_wrt", "kappa_wrt", "gamma_wrt",
               "heat_ratio_wrt", "pi_inf_wrt", "pres_inf_wrt", "c_wrt",
-              "omega_wrt", "qm_wrt", "liutex_wrt", "cf_wrt", "sim_data", "output_partial_domain"]:
+              "omega_wrt", "qm_wrt", "liutex_wrt", "cf_wrt", "mu_eff_wrt", "sim_data", "output_partial_domain"]:
         _r(n, LOG, {"output"})
     for d in ["x", "y", "z"]:
         _r(f"{d}_output%beg", REAL, {"output"})
@@ -698,7 +698,6 @@ def _load():  # pylint: disable=too-many-locals,too-many-statements
         for j in range(2, 10):
             _r(f"{px}a({j})", REAL)
         _r(f"{px}pres", A_REAL)
-        _r(f"{px}cf_val", A_REAL)
         # MHD fields
         for a in ["Bx", "By", "Bz"]:
             _r(f"{px}{a}", A_REAL, {"mhd"})
@@ -739,7 +738,7 @@ def _load():  # pylint: disable=too-many-locals,too-many-statements
         for j in [1, 2]:
             _r(f"{px}Re({j})", REAL, {"viscosity"})
         _r(f"{px}non_newtonian", LOG, {"viscosity"})
-        for a in ["tau0", "K", "nn", "mu_max", "mu_min", "mu_bulk", "hb_m"]:
+        for a in ["tau0", "K", "nn", "mu_max", "mu_min", "mu_bulk"]:
             _r(f"{px}{a}", REAL, {"viscosity"})
 
     # --- bub_pp (bubble properties) ---

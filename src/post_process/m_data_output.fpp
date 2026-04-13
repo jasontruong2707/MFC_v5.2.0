@@ -434,6 +434,9 @@ contains
             ! Numerical Schlieren function
             if (schlieren_wrt) dbvars = dbvars + 1
 
+            ! Effective viscosity
+            if (mu_eff_wrt) dbvars = dbvars + 1
+
         end if
 
         ! END: Querying Number of Flow Variable(s) in Binary Output

@@ -270,8 +270,7 @@ contains
                     mu_fluid = f_compute_hb_viscosity( &
                                fluid_pp(q)%tau0, fluid_pp(q)%K, &
                                fluid_pp(q)%nn, fluid_pp(q)%mu_min, &
-                               fluid_pp(q)%mu_max, shear_rate, &
-                               fluid_pp(q)%hb_m)
+                               fluid_pp(q)%mu_max, shear_rate)
                     Re_visc_per_phase(q, 1) = 1._wp/mu_fluid
                     ! Bulk viscosity
                     if (fluid_pp(q)%mu_bulk > 0._wp) then

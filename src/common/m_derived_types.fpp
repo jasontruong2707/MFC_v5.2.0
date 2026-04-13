@@ -262,7 +262,6 @@ module m_derived_types
         integer :: hcid
         !! id for hard coded initial condition
 
-        real(wp) :: cf_val !! color function value
         real(wp) :: Y(1:num_species)
 
         !! STL or OBJ model input parameter
@@ -359,7 +358,6 @@ module m_derived_types
         real(wp) :: mu_max        !< Maximum viscosity limit (shear)
         real(wp) :: mu_min        !< Minimum viscosity limit (shear)
         real(wp) :: mu_bulk       !< Bulk viscosity for non-Newtonian fluids
-        real(wp) :: hb_m          !< Papanastasiou regularization parameter
     end type physical_parameters
 
     !> Derived type annexing the physical parameters required for sub-grid bubble models
