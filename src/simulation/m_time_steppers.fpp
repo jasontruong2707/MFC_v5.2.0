@@ -720,6 +720,13 @@ contains
                 q_T_sf, &
                 q_prim_vf, &
                 idwint)
+
+            ! Exchange ghost cells so velocity gradient computation
+            ! in s_compute_re_visc sees correct neighbor values
+            ! across MPI subdomain boundaries (needed for non-Newtonian dt).
+            if (any_non_newtonian) then
+                call s_populate_variables_buffers(bc_type, q_prim_vf)
+            end if
         end if
 
         $:GPU_PARALLEL_LOOP(collapse=3, private='[vel, alpha, Re, Re_visc_per_phase, rho, vel_sum, pres, gamma, pi_inf, c, H, qv]')
